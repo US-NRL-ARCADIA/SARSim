@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "scenario_id": "action-script-all-features",
+    "name": "Three Corner Rescue Challenges",
+    "description": "A compact 10x10 map with one UGV and one shared field hospital. Challenge 1: navigate a wall maze to C1. Challenge 2: search a smoky debris field for multiple casualties. Challenge 3: clear debris to reach covered casualties."
+  },
+  "grid": {
+    "N": 10,
+    "Z": 3,
+    "cells": [
+      { "coord": { "x": 1, "y": 3, "z": 0 }, "status": "IMPASSABLE" },
+      { "coord": { "x": 2, "y": 3, "z": 0 }, "status": "IMPASSABLE" },
+      { "coord": { "x": 8, "y": 3, "z": 0 }, "status": "IMPASSABLE" },
+      { "coord": { "x": 7, "y": 2, "z": 0 }, "status": "IMPASSABLE" },
+      { "coord": { "x": 8, "y": 2, "z": 0 }, "status": "PASSABLE" },
+      { "coord": { "x": 8, "y": 7, "z": 0 }, "status": "PASSABLE" },
+      { "coord": { "x": 7, "y": 8, "z": 0 }, "status": "PASSABLE" }
+    ],
+    "smoke": [
+      { "coord": { "x": 9, "y": 3, "z": 0 }, "density": 0.35 },
+      { "coord": { "x": 9, "y": 2, "z": 0 }, "density": 0.6 },
+      { "coord": { "x": 8, "y": 2, "z": 0 }, "density": 0.25 },
+      { "coord": { "x": 9, "y": 1, "z": 0 }, "density": 0.3 }
+    ]
+  },
+  "agents": [
+    { "id": "A1", "coord": { "x": 1, "y": 4, "z": 0 }, "orientation": "NORTH", "agent_class": "UGV", "busy_ticks_remaining": 0, "damage_status": null, "payload_casualty_id": null }
+  ],
+  "casualties": [
+    { "id": "C1", "coord": { "x": 1, "y": 2, "z": 0 }, "health": 82, "decay_rate": 0.8, "is_covered": false, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "ALIVE" },
+    { "id": "C2", "coord": { "x": 8, "y": 2, "z": 0 }, "health": 100, "decay_rate": 0.35, "is_covered": true, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "ALIVE" },
+    { "id": "C3", "coord": { "x": 9, "y": 1, "z": 0 }, "health": 100, "decay_rate": 0.35, "is_covered": false, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "ALIVE" },
+    { "id": "C4", "coord": { "x": 8, "y": 7, "z": 0 }, "health": 100, "decay_rate": 0.35, "is_covered": true, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "ALIVE" },
+    { "id": "C5", "coord": { "x": 7, "y": 8, "z": 0 }, "health": 100, "decay_rate": 0.35, "is_covered": true, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "ALIVE" },
+    { "id": "C6", "coord": { "x": 4, "y": 5, "z": 0 }, "health": 0, "decay_rate": 0, "is_covered": false, "triage_state": "UNKNOWN", "transport_status": "ON_GROUND", "living_state": "DECEASED" }
+  ],
+  "buildings": [
+    { "id": "B1", "cells": [ { "coord": { "x": 2, "y": 1, "z": 0 }, "integrity": 0.25, "collapsed": false } ] },
+    { "id": "B2", "cells": [ { "coord": { "x": 9, "y": 9, "z": 0 }, "integrity": 0.1, "collapsed": true } ] }
+  ],
+  "zones": [
+    { "id": "FH1", "zone_type": "FIELD_HOSPITAL", "cells": [ { "x": 5, "y": 5, "z": 0 } ], "labels": [ "shared-medical-dropoff", "field-hospital" ] },
+    { "id": "EX1", "zone_type": "EXTRACTION", "cells": [ { "x": 1, "y": 9, "z": 0 }, { "x": 2, "y": 9, "z": 0 } ], "labels": [ "staging", "extraction" ] }
+  ],
+  "scheduled_events": [
+    { "event_id": "smoke-thickens-1", "tick": 35, "event_type": "SMOKE_INCREASE", "payload": { "coord": { "x": 9, "y": 2, "z": 0 }, "density": 0.85 } }
+  ],
+  "objectives": {
+    "primary_goals": [ "Challenge 1: navigate around walls to C1", "Challenge 2: search for multiple casualties through smoke, debris, and walls", "Challenge 3: clear debris to reach C4 and C5", "Deliver living casualties to the shared field hospital", "Breach B1 and recover C6" ],
+    "time_budget_ticks": 100
+  },
+  "evaluation": { "expected_difficulty": "hard" }
+}

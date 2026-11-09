@@ -1,0 +1,37 @@
+[project]
+name = "sarsim"
+version = "0.1.0"
+description = "Search-and-rescue simulation environment with gRPC/WebSocket API."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "fastapi",
+    "uvicorn",
+    "grpcio",
+    "grpcio-tools",
+    "protobuf",
+    "websockets",
+    "aiohttp",
+    "pygame",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "mypy",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
