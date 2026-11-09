@@ -4,6 +4,7 @@ import asyncio
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from src.api.scenarios import seed_dev_scenario
 from src.api.serializers import (
@@ -61,6 +62,7 @@ _API_TO_ENGINE_ACTION_TYPE = {
     ApiEngineActionType.TURN_LEFT: EngineActionType.TURN_LEFT,
     ApiEngineActionType.TURN_RIGHT: EngineActionType.TURN_RIGHT,
 }
+
 
 @app.get("/state", response_model=StateSnapshotModel)
 def get_state() -> StateSnapshotModel:
@@ -163,3 +165,21 @@ def reset() -> dict[str, str]:
     """Reset the simulation and clear all state and events."""
     reset_engine()
     return {"status": "ok"}
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def root() -> str:
+    """Describe how to reach the UI when this process is API-only."""
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head><title>SARSim API</title></head>
+      <body>
+        <h1>SARSim API</h1>
+        <p>This is the backend API, not the browser application.</p>
+        <p>Start the full application with <code>./run.sh</code>, then open
+        <a href="http://localhost:3000">http://localhost:3000</a>.</p>
+        <p><a href="/docs">API documentation</a></p>
+      </body>
+    </html>
+    """

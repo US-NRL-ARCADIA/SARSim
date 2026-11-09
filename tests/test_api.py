@@ -12,6 +12,14 @@ def setup_function() -> None:
     reset_engine()
 
 
+def test_api_only_root_explains_how_to_start_the_application() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "This is the backend API" in response.text
+    assert "http://localhost:3000" in response.text
+
+
 def test_get_state_initially_empty() -> None:
     response = client.get("/state")
     assert response.status_code == 200

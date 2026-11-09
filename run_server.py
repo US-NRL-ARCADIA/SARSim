@@ -4,7 +4,10 @@ import uvicorn
 
 
 def main() -> None:
-    """Run the SARSim FastAPI development server."""
+    """Run only the SARSim FastAPI backend."""
+    print("SARSim API: http://127.0.0.1:8000")
+    print("SARSim API documentation: http://127.0.0.1:8000/docs")
+    print("This command does not start the browser application; use ./run.sh for that.")
     uvicorn.run(
         "src.api.server:app",
         host="127.0.0.1",

@@ -36,15 +36,7 @@ If editable install support is not yet configured for your environment, install 
 ./.venv/bin/python -m pytest
 ```
 
-## Running the server
-
-```sh
-./.venv/bin/python run_server.py
-```
-
-The development server starts a FastAPI app on `http://127.0.0.1:8000`.
-
-## Running the UI and server together
+## Running the full application
 
 After completing the setup steps above and installing the UI dependencies with
 `cd ui && npm ci`, start both services from the project root with:
@@ -55,6 +47,20 @@ After completing the setup steps above and installing the UI dependencies with
 
 The API is available at `http://127.0.0.1:8000` and the UI at
 `http://localhost:3000`. Press Ctrl+C to stop both services.
+
+> **Open `http://localhost:3000` to use SARSim.** Port 8000 is the backend API
+> and does not contain the browser application.
+
+## Running only the backend API
+
+```sh
+./.venv/bin/python run_server.py
+```
+
+This command starts **only the FastAPI backend** at `http://127.0.0.1:8000`; it
+does not start the SARSim browser application. Interactive API documentation is
+available at `http://127.0.0.1:8000/docs`.
+
 Useful endpoints include:
 - `GET /state`
 - `POST /actions`
