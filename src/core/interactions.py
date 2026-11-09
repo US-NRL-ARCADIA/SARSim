@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .agents import Agent
 from .buildings import BuildingCell
 from .casualties import Casualty, LivingState, TriageState
@@ -109,7 +111,7 @@ def unload_casualty(agent: Agent) -> tuple[bool, str]:
 
 def transfer_casualty_to_hospital(
     agent: Agent,
-    zones: list[dict[str, object]],
+    zones: list[dict[str, Any]],
     hospital_casualty_ids_by_zone: dict[str, list[str]],
 ) -> tuple[bool, str, str | None]:
     """Transfer the currently carried casualty into adjacent field-hospital care."""

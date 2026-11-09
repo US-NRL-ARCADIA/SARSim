@@ -22,6 +22,7 @@ from src.core.sensors import (
     update_belief_state,
 )
 
+
 def _make_grid() -> SpatialGrid:
     # Small 2D grid with one z-level for simplicity here.
     return SpatialGrid(N=5, Z=1)

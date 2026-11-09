@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 from .agents import Agent
 from .casualties import Casualty, LivingState
@@ -29,7 +28,7 @@ class Building:
         self,
         grid: SpatialGrid,
         cell_coord: Coordinate,
-        casualties: Dict[str, Casualty],
+        casualties: dict[str, Casualty],
     ) -> None:
         """Apply collapse rule to the specified cell if integrity < 0.2."""
         key = (cell_coord.x, cell_coord.y, cell_coord.z)

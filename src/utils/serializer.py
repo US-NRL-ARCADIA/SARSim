@@ -11,7 +11,6 @@ from src.core.grid import Coordinate, SpatialGrid
 from src.core.sensors import AgentBeliefCell, AgentBeliefState
 from src.core.types import CellStatus, DamageStatus, TransportStatus
 
-
 SerializedState = dict[str, Any]
 ScenarioDefinition = dict[str, Any]
 
@@ -194,13 +193,13 @@ def deserialize_engine_state(data: SerializedState) -> SimulationEngine:
         str(zone_id): [str(casualty_id) for casualty_id in casualty_ids]
         for zone_id, casualty_ids in data.get("hospital_casualty_ids_by_zone", {}).items()
     }
-    engine.rescued_casualty_ids = set(
+    engine.rescued_casualty_ids = {
         str(casualty_id)
         for casualty_id in data.get(
             "rescued_casualty_ids",
             [casualty_id for roster in engine.hospital_casualty_ids_by_zone.values() for casualty_id in roster],
         )
-    )
+    }
     engine.temporal_constraint = data.get("temporal_constraint")
     engine.ended = bool(data.get("ended", False))
     engine.success = data.get("success")

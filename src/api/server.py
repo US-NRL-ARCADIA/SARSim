@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import asyncio
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,8 +13,8 @@ from src.api.serializers import (
     event_to_model,
     grid_cells_from_engine,
     telemetry_frame_from_engine,
-    zones_from_engine,
     temporal_constraint_from_engine,
+    zones_from_engine,
 )
 from src.api.state import (
     get_engine,
@@ -25,21 +24,16 @@ from src.api.state import (
 )
 from src.core.actions import EngineAction, EngineActionType
 from src.core.grid import Coordinate
+
 from .models import (
     ApiEngineActionType,
-    BuildingCellStateModel,
-    BuildingStateModel,
-    CasualtyStateModel,
-    EventModel,
+    LoadScenarioFromPathRequest,
+    LoadScenarioRequest,
     QueueActionsRequest,
     StateSnapshotModel,
     StepRequest,
-    AgentStateModel,
     TelemetryFrameModel,
-    LoadScenarioFromPathRequest,
-    LoadScenarioRequest,
 )
-
 
 app = FastAPI(title="SARSim API")
 
@@ -96,7 +90,7 @@ def step(req: StepRequest) -> StateSnapshotModel:
     return get_state()
 
 @app.post("/actions")
-def queue_actions(req: QueueActionsRequest) -> Dict[str, str]:
+def queue_actions(req: QueueActionsRequest) -> dict[str, str]:
     engine = get_engine()
     if engine.ended:
         raise HTTPException(status_code=409, detail="Scenario has ended")
@@ -139,19 +133,19 @@ async def events_stream(ws: WebSocket) -> None:
         return
     
 @app.post("/init/dev")
-def init_dev() -> Dict[str, str]:
+def init_dev() -> dict[str, str]:
     seed_dev_scenario(get_engine())
     return {"status": "ok"}
 
 
 @app.post("/scenario/load")
-def load_scenario(req: LoadScenarioRequest) -> Dict[str, str]:
+def load_scenario(req: LoadScenarioRequest) -> dict[str, str]:
     load_engine_from_scenario_definition(req.scenario)
     return {"status": "ok"}
 
 
 @app.post("/scenario/load-from-path")
-def load_scenario_from_path(req: LoadScenarioFromPathRequest) -> Dict[str, str]:
+def load_scenario_from_path(req: LoadScenarioFromPathRequest) -> dict[str, str]:
     load_engine_from_scenario_file(req.filepath)
     return {"status": "ok"}
 
@@ -160,12 +154,12 @@ def get_telemetry() -> list[TelemetryFrameModel]:
     engine = get_engine()
     return [
         telemetry_frame_from_engine(engine, agent_id)
-        for agent_id in engine.agents.keys()
+        for agent_id in engine.agents
     ]
 
 
 @app.post("/reset")
-def reset() -> Dict[str, str]:
+def reset() -> dict[str, str]:
     """Reset the simulation and clear all state and events."""
     reset_engine()
     return {"status": "ok"}

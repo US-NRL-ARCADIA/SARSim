@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .action_handlers import apply_action
 from .actions import EngineAction, EngineActionType
 from .agents import Agent, AgentClass, Orientation
 from .buildings import Building
 from .casualties import Casualty
-from .types import TransportStatus
 from .events import Event, EventType
-from .grid import SpatialGrid
+from .grid import Coordinate, SpatialGrid
 from .sensors import AgentBeliefState, AgentView, get_agent_view, update_belief_state
+from .types import TransportStatus
 
 
 @dataclass
@@ -26,23 +26,23 @@ class SimulationEngine:
     """
 
     grid: SpatialGrid
-    agents: Dict[str, Agent] = field(default_factory=dict)
-    casualties: Dict[str, Casualty] = field(default_factory=dict)
-    buildings: Dict[str, Building] = field(default_factory=dict)
-    zones: List[Dict[str, object]] = field(default_factory=list)
-    hospital_casualty_ids_by_zone: Dict[str, List[str]] = field(default_factory=dict)
+    agents: dict[str, Agent] = field(default_factory=dict)
+    casualties: dict[str, Casualty] = field(default_factory=dict)
+    buildings: dict[str, Building] = field(default_factory=dict)
+    zones: list[dict[str, Any]] = field(default_factory=list)
+    hospital_casualty_ids_by_zone: dict[str, list[str]] = field(default_factory=dict)
     rescued_casualty_ids: set[str] = field(default_factory=set)
-    temporal_constraint: Dict[str, object] | None = None
+    temporal_constraint: dict[str, Any] | None = None
     ended: bool = False
     success: bool | None = None
 
     current_tick: int = 0
-    pending_actions: List[EngineAction] = field(default_factory=list)
-    events: List[Event] = field(default_factory=list)
-    scheduled_events: List[Dict[str, object]] = field(default_factory=list)
-    agent_beliefs: Dict[str, AgentBeliefState] = field(default_factory=dict)
-    latest_agent_views: Dict[str, AgentView] = field(default_factory=dict)
-    telemetry_log: List[Dict[str, Any]] = field(default_factory=list)
+    pending_actions: list[EngineAction] = field(default_factory=list)
+    events: list[Event] = field(default_factory=list)
+    scheduled_events: list[dict[str, Any]] = field(default_factory=list)
+    agent_beliefs: dict[str, AgentBeliefState] = field(default_factory=dict)
+    latest_agent_views: dict[str, AgentView] = field(default_factory=dict)
+    telemetry_log: list[dict[str, Any]] = field(default_factory=list)
     event_type_enum = EventType
 
     def add_agent(self, agent: Agent) -> None:
@@ -61,8 +61,8 @@ class SimulationEngine:
         self,
         event_type: EventType,
         message: str,
-        actor_id: Optional[str] = None,
-        payload: Optional[Dict[str, object]] = None,
+        actor_id: str | None = None,
+        payload: dict[str, object] | None = None,
     ) -> None:
         self.events.append(
             Event(
@@ -134,8 +134,7 @@ class SimulationEngine:
         for agent in self.agents.values():
             if agent.busy_ticks_remaining > 0:
                 agent.busy_ticks_remaining -= 1
-                if agent.busy_ticks_remaining < 0:
-                    agent.busy_ticks_remaining = 0
+                agent.busy_ticks_remaining = max(agent.busy_ticks_remaining, 0)
 
     def _update_casualties_health(self) -> None:
         for casualty in self.casualties.values():
@@ -183,7 +182,7 @@ class SimulationEngine:
                 )
 
     def _apply_scheduled_events(self) -> None:
-        remaining_events: List[Dict[str, object]] = []
+        remaining_events: list[dict[str, Any]] = []
         for scheduled_event in self.scheduled_events:
             tick = int(scheduled_event.get("tick", -1))
             if tick != self.current_tick:
@@ -226,12 +225,8 @@ class SimulationEngine:
                 self.grid.set_cell_status(coord, CellStatus[status_name])
             return
 
-    def grid_coord_from_dict(self, data: Dict[str, object]) -> object:
-        return self.grid_coord_class()(x=int(data["x"]), y=int(data["y"]), z=int(data["z"]))
-
-    def grid_coord_class(self) -> object:
-        from .grid import Coordinate
-        return Coordinate
+    def grid_coord_from_dict(self, data: dict[str, Any]) -> Coordinate:
+        return Coordinate(x=int(data["x"]), y=int(data["y"]), z=int(data["z"]))
 
     def _apply_ready_actions(self) -> None:
         ready_actions = [
@@ -258,13 +253,13 @@ class SimulationEngine:
             a for a in self.pending_actions if not (a.completed or a.failed)
         ]
 
-    def _resolve_concurrent_move_conflicts(self, ready_actions: List[EngineAction]) -> set[str]:
+    def _resolve_concurrent_move_conflicts(self, ready_actions: list[EngineAction]) -> set[str]:
         move_actions = [
             action
             for action in ready_actions
             if action.action_type is EngineActionType.MOVE_FORWARD
         ]
-        target_to_actions: Dict[tuple[int, int, int], List[EngineAction]] = {}
+        target_to_actions: dict[tuple[int, int, int], list[EngineAction]] = {}
 
         for action in move_actions:
             actor = self.agents.get(action.actor_id)
@@ -291,7 +286,7 @@ class SimulationEngine:
         class_priority = 0 if actor.agent_class is AgentClass.UAV else 1
         return (class_priority, actor.id)
 
-    def _target_for_move_forward(self, actor: Agent) -> object | None:
+    def _target_for_move_forward(self, actor: Agent) -> Coordinate:
         dx, dy = 0, 0
         if actor.orientation is Orientation.NORTH:
             dy = -1

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from src.core.agents import Agent, AgentClass, Orientation
 from src.core.casualties import Casualty, LivingState, TriageState
+from src.core.engine import SimulationEngine
 from src.core.grid import Coordinate
 from src.core.types import TransportStatus
-from src.core.engine import SimulationEngine
 
 
 def seed_dev_scenario(engine: SimulationEngine) -> None:

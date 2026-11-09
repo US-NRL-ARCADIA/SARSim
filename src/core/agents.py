@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .grid import Coordinate, SpatialGrid
 from .types import CellStatus, DamageStatus
@@ -36,9 +36,9 @@ class Agent:
     orientation: Orientation
     agent_class: AgentClass
     busy_ticks_remaining: int = 0
-    last_error: Optional[str] = None
-    damage_status: Optional[DamageStatus] = None
-    payload: Optional[Casualty] = None
+    last_error: str | None = None
+    damage_status: DamageStatus | None = None
+    payload: Casualty | None = None
 
 
 def _orientation_delta(orientation: Orientation) -> tuple[int, int]:

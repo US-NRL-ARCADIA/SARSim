@@ -1,14 +1,27 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from .actions import EngineAction, EngineActionType
-from .agents import ascend, move_forward, turn_left, turn_right, descend
+from .agents import ascend, descend, move_forward, turn_left, turn_right
 from .buildings import BuildingCell
-from .interactions import breach_entryway, clear_debris, load_casualty, retrieve_body, transfer_casualty_to_hospital, triage, unload_casualty
+from .casualties import Casualty
+from .grid import Coordinate
+from .interactions import (
+    breach_entryway,
+    clear_debris,
+    load_casualty,
+    retrieve_body,
+    transfer_casualty_to_hospital,
+    triage,
+    unload_casualty,
+)
+
+if TYPE_CHECKING:
+    from .engine import SimulationEngine
 
 
-def apply_action(engine: object, action: EngineAction) -> None:
+def apply_action(engine: SimulationEngine, action: EngineAction) -> None:
     actor = engine.agents.get(action.actor_id)
     if actor is None:
         _fail_action(engine, action, "ACTOR_NOT_FOUND", f"Actor {action.actor_id} not found for action {action.action_id}")
@@ -174,36 +187,39 @@ def apply_action(engine: object, action: EngineAction) -> None:
 
 
 def _complete_action(
-    engine: object,
+    engine: SimulationEngine,
     action: EngineAction,
     actor_id: str,
     message: str,
-    payload: Optional[dict[str, object]] = None,
+    payload: dict[str, object] | None = None,
 ) -> None:
     action.completed = True
-    event_payload = {"action_id": action.action_id}
+    event_payload: dict[str, object] = {"action_id": action.action_id}
     if payload is not None:
         event_payload.update(payload)
     engine.log_event(engine.event_type_enum.ACTION_COMPLETED, message, actor_id=actor_id, payload=event_payload)
 
 
 def _fail_action(
-    engine: object,
+    engine: SimulationEngine,
     action: EngineAction,
     reason: str,
     message: str,
-    actor_id: Optional[str] = None,
-    payload: Optional[dict[str, object]] = None,
+    actor_id: str | None = None,
+    payload: dict[str, object] | None = None,
 ) -> None:
     action.failed = True
     action.failure_reason = reason
-    event_payload = {"action_id": action.action_id, "reason": reason}
+    event_payload: dict[str, object] = {"action_id": action.action_id, "reason": reason}
     if payload is not None:
         event_payload.update(payload)
     engine.log_event(engine.event_type_enum.ACTION_FAILED, message, actor_id=actor_id, payload=event_payload)
 
 
-def _require_casualty(engine: object, action: EngineAction) -> object | None:
+def _require_casualty(
+    engine: SimulationEngine,
+    action: EngineAction,
+) -> Casualty | None:
     if action.target_casualty_id is None:
         action.failed = True
         action.failure_reason = "MISSING_TARGET_CASUALTY"
@@ -216,7 +232,7 @@ def _require_casualty(engine: object, action: EngineAction) -> object | None:
     return casualty
 
 
-def _require_coord(engine: object, action: EngineAction) -> object | None:
+def _require_coord(engine: SimulationEngine, action: EngineAction) -> Coordinate | None:
     if action.target_coord is None:
         action.failed = True
         action.failure_reason = "MISSING_TARGET_COORD"
@@ -224,7 +240,10 @@ def _require_coord(engine: object, action: EngineAction) -> object | None:
     return action.target_coord
 
 
-def _find_building_cell(engine: object, coord: object) -> Optional[BuildingCell]:
+def _find_building_cell(
+    engine: SimulationEngine,
+    coord: Coordinate,
+) -> BuildingCell | None:
     key = (coord.x, coord.y, coord.z)
     for building in engine.buildings.values():
         if key in building.cells:

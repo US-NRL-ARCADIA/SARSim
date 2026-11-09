@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -34,7 +33,7 @@ class SpatialGrid:
 
         self.status_grid: np.ndarray = np.zeros((N, N, Z), dtype=np.int32)
         self.smoke_grid: np.ndarray = np.zeros((N, N, Z), dtype=np.float64)
-        self.entity_locations: Dict[Tuple[int, int, int], List[object]] = {}
+        self.entity_locations: dict[tuple[int, int, int], list[object]] = {}
 
     def is_in_bounds(self, coord: Coordinate) -> bool:
         """Return True if coord is inside [0, N-1] x [0, N-1] x [0, Z-1]."""
@@ -89,7 +88,7 @@ class SpatialGrid:
         if not entities:
             del self.entity_locations[key]
 
-    def get_entities(self, coord: Coordinate) -> List[object]:
+    def get_entities(self, coord: Coordinate) -> list[object]:
         """Return list of entities at the given coordinate."""
         if not self.is_in_bounds(coord):
             raise IndexError("Coordinate out of bounds.")

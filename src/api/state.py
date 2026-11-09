@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from fastapi import HTTPException
 
 from src.core.engine import SimulationEngine
 from src.core.grid import SpatialGrid
 from src.utils.serializer import ScenarioDefinition, build_engine_from_scenario_definition
-
 
 grid = SpatialGrid(N=10, Z=3)
 engine = SimulationEngine(grid=grid)

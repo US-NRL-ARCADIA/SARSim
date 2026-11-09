@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from math import atan2, degrees, hypot
-from typing import Dict, List, Tuple
 
 from .entities import Agent, AgentClass, Casualty, Orientation
-from .grid import CellStatus, Coordinate, SpatialGrid
+from .grid import Coordinate, SpatialGrid
+from .types import CellStatus
 
 
 @dataclass
@@ -52,17 +52,17 @@ class AgentBeliefState:
     """Accumulated per-agent belief map over time."""
 
     agent_id: str
-    cells: Dict[Tuple[int, int, int], AgentBeliefCell] = field(default_factory=dict)
+    cells: dict[tuple[int, int, int], AgentBeliefCell] = field(default_factory=dict)
 
 
-def _has_casualty_at(coord: Coordinate, casualties: Dict[str, Casualty]) -> bool:
+def _has_casualty_at(coord: Coordinate, casualties: dict[str, Casualty]) -> bool:
     return any(
         c.coord.x == coord.x and c.coord.y == coord.y and c.coord.z == coord.z
         for c in casualties.values()
     )
 
 
-def _orientation_direction(orientation: Orientation) -> Tuple[int, int, int]:
+def _orientation_direction(orientation: Orientation) -> tuple[int, int, int]:
     if orientation is Orientation.NORTH:
         return (0, -1, 0)
     if orientation is Orientation.SOUTH:
@@ -91,7 +91,7 @@ def _orientation_bearing_degrees(orientation: Orientation) -> float:
     return _bearing_degrees(dx, dy)
 
 
-def _line_points(origin: Coordinate, target: Coordinate) -> List[Coordinate]:
+def _line_points(origin: Coordinate, target: Coordinate) -> list[Coordinate]:
     dx = target.x - origin.x
     dy = target.y - origin.y
     dz = target.z - origin.z
@@ -99,22 +99,22 @@ def _line_points(origin: Coordinate, target: Coordinate) -> List[Coordinate]:
     if steps == 0:
         return []
 
-    points: List[Coordinate] = []
+    points: list[Coordinate] = []
     x, y, z = origin.x, origin.y, origin.z
     x_inc = 1 if dx > 0 else -1 if dx < 0 else 0
     y_inc = 1 if dy > 0 else -1 if dy < 0 else 0
     z_inc = 1 if dz > 0 else -1 if dz < 0 else 0
-    l = abs(dx)
+    x_length = abs(dx)
     m = abs(dy)
     n = abs(dz)
-    dx2 = l * 2
+    dx2 = x_length * 2
     dy2 = m * 2
     dz2 = n * 2
 
-    if l >= m and l >= n:
-        err_y = dy2 - l
-        err_z = dz2 - l
-        for _ in range(l):
+    if x_length >= m and x_length >= n:
+        err_y = dy2 - x_length
+        err_z = dz2 - x_length
+        for _ in range(x_length):
             x += x_inc
             if err_y > 0:
                 y += y_inc
@@ -125,7 +125,7 @@ def _line_points(origin: Coordinate, target: Coordinate) -> List[Coordinate]:
             err_y += dy2
             err_z += dz2
             points.append(Coordinate(x=x, y=y, z=z))
-    elif m >= l and m >= n:
+    elif m >= x_length and m >= n:
         err_x = dx2 - m
         err_z = dz2 - m
         for _ in range(m):
@@ -159,16 +159,16 @@ def _line_points(origin: Coordinate, target: Coordinate) -> List[Coordinate]:
 
 def raycast(
     grid: SpatialGrid,
-    casualties: Dict[str, Casualty],
+    casualties: dict[str, Casualty],
     origin: Coordinate,
-    direction: Tuple[int, int, int],
+    direction: tuple[int, int, int],
     max_range: int,
     agent_class: AgentClass,
-) -> List[RaySample]:
+) -> list[RaySample]:
     """Cast a ray from `origin` in `direction`, returning samples up to `max_range`."""
 
     dx, dy, dz = direction
-    samples: List[RaySample] = []
+    samples: list[RaySample] = []
 
     current = origin
     for _ in range(max_range):
@@ -198,7 +198,7 @@ def raycast(
 
 def _observe_target(
     grid: SpatialGrid,
-    casualties: Dict[str, Casualty],
+    casualties: dict[str, Casualty],
     origin: Coordinate,
     target: Coordinate,
     agent_class: AgentClass,
@@ -258,15 +258,15 @@ def _observe_target(
 
 def raycast_radial(
     grid: SpatialGrid,
-    casualties: Dict[str, Casualty],
+    casualties: dict[str, Casualty],
     origin: Coordinate,
     radius: int,
     agent_class: AgentClass,
     smoke_obscures_at: float = 1.0,
-) -> List[ObservationSample]:
+) -> list[ObservationSample]:
     """Return visible/observed cells within a radius using LOS checks."""
 
-    observations: List[ObservationSample] = []
+    observations: list[ObservationSample] = []
 
     for x in range(origin.x - radius, origin.x + radius + 1):
         for y in range(origin.y - radius, origin.y + radius + 1):
@@ -294,18 +294,18 @@ def raycast_radial(
 
 def raycast_cone(
     grid: SpatialGrid,
-    casualties: Dict[str, Casualty],
+    casualties: dict[str, Casualty],
     origin: Coordinate,
     orientation: Orientation,
     max_range: int,
     agent_class: AgentClass,
     angle_degrees: float = 90.0,
     smoke_obscures_at: float = 1.0,
-) -> List[ObservationSample]:
+) -> list[ObservationSample]:
     """Return visible/observed cells within a forward-facing cone."""
 
     facing = _orientation_bearing_degrees(orientation)
-    observations: List[ObservationSample] = []
+    observations: list[ObservationSample] = []
 
     for x in range(origin.x - max_range, origin.x + max_range + 1):
         for y in range(origin.y - max_range, origin.y + max_range + 1):
@@ -348,14 +348,14 @@ class AgentView:
     agent_id: str
     origin: Coordinate
     orientation: str
-    ray_samples: List[RaySample]
-    cone_samples: List[ObservationSample] = field(default_factory=list)
-    radial_samples: List[ObservationSample] = field(default_factory=list)
+    ray_samples: list[RaySample]
+    cone_samples: list[ObservationSample] = field(default_factory=list)
+    radial_samples: list[ObservationSample] = field(default_factory=list)
 
 
 def get_agent_view(
     grid: SpatialGrid,
-    casualties: Dict[str, Casualty],
+    casualties: dict[str, Casualty],
     agent: Agent,
     max_range: int,
     cone_angle_degrees: float = 90.0,
@@ -405,7 +405,7 @@ def get_agent_view(
 
 def update_belief_state(
     belief_state: AgentBeliefState,
-    observations: List[ObservationSample],
+    observations: list[ObservationSample],
     tick: int,
 ) -> AgentBeliefState:
     """Merge new observations into an agent-local belief map."""

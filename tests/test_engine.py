@@ -17,7 +17,7 @@ from src.core.entities import (
     Orientation,
     TriageState,
 )
-from src.core.grid import SpatialGrid, CellStatus
+from src.core.grid import CellStatus, SpatialGrid
 
 
 def _make_engine() -> SimulationEngine:

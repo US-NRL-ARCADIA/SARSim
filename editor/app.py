@@ -862,7 +862,7 @@ class ScenarioEditor:
     def _validate_scenario(self) -> None:
         try:
             build_engine_from_scenario_definition(self.scenario)
-        except Exception as exc:
+        except (IndexError, KeyError, TypeError, ValueError) as exc:
             self.status_message = f"Validation failed: {exc}"
             return
         self.status_message = "Scenario validated successfully"

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from src.core.grid import Coordinate, SpatialGrid, CellStatus
 from src.core.entities import (
     Agent,
     AgentClass,
     Orientation,
     move_forward,
 )
+from src.core.grid import CellStatus, Coordinate, SpatialGrid
 
 
 def _make_grid() -> SpatialGrid:

@@ -3,20 +3,20 @@ from __future__ import annotations
 from src.core.entities import (
     Agent,
     AgentClass,
-    Orientation,
     Building,
     BuildingCell,
     Casualty,
     Coordinate,
     LivingState,
+    Orientation,
     TriageState,
-    clear_debris,
-    triage,
-    retrieve_body,
-    load_casualty,
-    unload_casualty,
-    transfer_casualty_to_hospital,
     breach_entryway,
+    clear_debris,
+    load_casualty,
+    retrieve_body,
+    transfer_casualty_to_hospital,
+    triage,
+    unload_casualty,
 )
 from src.core.grid import CellStatus, SpatialGrid
 

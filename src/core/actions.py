@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional
 
 from .grid import Coordinate
 
@@ -29,13 +28,13 @@ class EngineAction:
     action_id: str
     actor_id: str
     action_type: EngineActionType
-    target_casualty_id: Optional[str] = None
-    target_coord: Optional[Coordinate] = None
+    target_casualty_id: str | None = None
+    target_coord: Coordinate | None = None
     start_tick: int = 0
     duration: int = 0
     completed: bool = False
     failed: bool = False
-    failure_reason: Optional[str] = None
+    failure_reason: str | None = None
 
     def ready_to_apply(self, current_tick: int) -> bool:
         return (

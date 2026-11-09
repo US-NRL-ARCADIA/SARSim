@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -35,11 +34,11 @@ class QueueActionRequest(BaseModel):
     action_type: ApiEngineActionType
     start_tick: int = Field(default=0, ge=0)
     duration: int = Field(default=0, ge=0)
-    target_casualty_id: Optional[str] = Field(default=None, min_length=1)
-    target_coord: Optional[CoordinateModel] = None
+    target_casualty_id: str | None = Field(default=None, min_length=1)
+    target_coord: CoordinateModel | None = None
 
     @model_validator(mode="after")
-    def validate_targets(self) -> "QueueActionRequest":
+    def validate_targets(self) -> QueueActionRequest:
         casualty_actions = {
             ApiEngineActionType.TRIAGE,
             ApiEngineActionType.RETRIEVE_BODY,
@@ -66,7 +65,7 @@ class QueueActionRequest(BaseModel):
 
 
 class QueueActionsRequest(BaseModel):
-    actions: List[QueueActionRequest] = Field(min_length=1)
+    actions: list[QueueActionRequest] = Field(min_length=1)
 
 
 class StepRequest(BaseModel):
@@ -78,9 +77,9 @@ class ObservationSampleModel(BaseModel):
     y: int
     z: int
     is_visible: bool
-    cell_status: Optional[str] = None
-    smoke_density: Optional[float] = None
-    has_casualty: Optional[bool] = None
+    cell_status: str | None = None
+    smoke_density: float | None = None
+    has_casualty: bool | None = None
     obscured_by_smoke: bool = False
 
 
@@ -89,22 +88,22 @@ class BeliefCellModel(BaseModel):
     y: int
     z: int
     last_update_tick: int
-    last_seen_tick: Optional[int] = None
+    last_seen_tick: int | None = None
     ever_observed: bool
     currently_visible: bool
-    last_known_cell_status: Optional[str] = None
-    last_known_smoke_density: Optional[float] = None
-    last_known_has_casualty: Optional[bool] = None
+    last_known_cell_status: str | None = None
+    last_known_smoke_density: float | None = None
+    last_known_has_casualty: bool | None = None
     obscured_by_smoke: bool = False
 
 
 class AgentObservationModel(BaseModel):
-    cone_samples: List[ObservationSampleModel]
-    radial_samples: List[ObservationSampleModel]
+    cone_samples: list[ObservationSampleModel]
+    radial_samples: list[ObservationSampleModel]
 
 
 class AgentBeliefModel(BaseModel):
-    cells: List[BeliefCellModel]
+    cells: list[BeliefCellModel]
 
 
 class AgentStateModel(BaseModel):
@@ -115,10 +114,10 @@ class AgentStateModel(BaseModel):
     orientation: str
     agent_class: str
     busy_ticks_remaining: int
-    damage_status: Optional[str] = None
-    payload_casualty_id: Optional[str] = None
-    observation: Optional[AgentObservationModel] = None
-    belief: Optional[AgentBeliefModel] = None
+    damage_status: str | None = None
+    payload_casualty_id: str | None = None
+    observation: AgentObservationModel | None = None
+    belief: AgentBeliefModel | None = None
 
 
 class CasualtyStateModel(BaseModel):
@@ -144,7 +143,7 @@ class BuildingCellStateModel(BaseModel):
 
 class BuildingStateModel(BaseModel):
     id: str
-    cells: List[BuildingCellStateModel]
+    cells: list[BuildingCellStateModel]
 
 
 class GridCellStateModel(BaseModel):
@@ -171,25 +170,25 @@ class ZoneCellModel(BaseModel):
 class ZoneStateModel(BaseModel):
     id: str
     zone_type: str
-    cells: List[ZoneCellModel]
-    labels: List[str] = Field(default_factory=list)
+    cells: list[ZoneCellModel]
+    labels: list[str] = Field(default_factory=list)
     casualty_count_under_care: int = 0
-    casualty_ids_under_care: List[str] = Field(default_factory=list)
+    casualty_ids_under_care: list[str] = Field(default_factory=list)
 
 
 class StateSnapshotModel(BaseModel):
     tick: int
-    temporal_constraint: Optional["TemporalConstraintStateModel"] = None
+    temporal_constraint: TemporalConstraintStateModel | None = None
     ended: bool = False
-    success: Optional[bool] = None
+    success: bool | None = None
     grid_size: int
     z_levels: int
-    agents: Dict[str, AgentStateModel]
-    casualties: Dict[str, CasualtyStateModel]
-    buildings: Dict[str, BuildingStateModel]
-    zones: List[ZoneStateModel] = Field(default_factory=list)
-    grid_cells: List[GridCellStateModel] = Field(default_factory=list)
-    events: List["EventModel"] = Field(default_factory=list)
+    agents: dict[str, AgentStateModel]
+    casualties: dict[str, CasualtyStateModel]
+    buildings: dict[str, BuildingStateModel]
+    zones: list[ZoneStateModel] = Field(default_factory=list)
+    grid_cells: list[GridCellStateModel] = Field(default_factory=list)
+    events: list[EventModel] = Field(default_factory=list)
 
 
 class TemporalConstraintStateModel(BaseModel):
@@ -204,8 +203,8 @@ class EventModel(BaseModel):
     tick: int
     event_type: str
     message: str
-    actor_id: Optional[str] = None
-    payload: Optional[Dict[str, object]] = None
+    actor_id: str | None = None
+    payload: dict[str, object] | None = None
 
 
 class LoadScenarioFromPathRequest(BaseModel):

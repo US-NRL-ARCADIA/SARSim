@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional
 
 
 class EventType(Enum):
@@ -21,5 +20,5 @@ class Event:
     tick: int
     event_type: EventType
     message: str
-    actor_id: Optional[str] = None
-    payload: Optional[dict[str, object]] = None
+    actor_id: str | None = None
+    payload: dict[str, object] | None = None

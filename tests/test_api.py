@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from src.api.server import app
 from src.api.state import reset_engine
 
-
 client = TestClient(app)
 
 

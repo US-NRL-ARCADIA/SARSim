@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-
 from src.api.models import (
     AgentBeliefModel,
     AgentObservationModel,
@@ -20,11 +18,11 @@ from src.api.models import (
 )
 from src.core.engine import SimulationEngine
 from src.core.events import Event
-from src.core.sensors import get_agent_view
+from src.core.sensors import ObservationSample, get_agent_view
 from src.core.types import CellStatus
 
 
-def _observation_sample_to_model(sample: object) -> ObservationSampleModel:
+def _observation_sample_to_model(sample: ObservationSample) -> ObservationSampleModel:
     return ObservationSampleModel(
         x=sample.coord.x,
         y=sample.coord.y,
@@ -84,8 +82,8 @@ def telemetry_frame_from_engine(engine: SimulationEngine, agent_id: str) -> Tele
     )
 
 
-def agent_state_from_engine(engine: SimulationEngine) -> Dict[str, AgentStateModel]:
-    result: Dict[str, AgentStateModel] = {}
+def agent_state_from_engine(engine: SimulationEngine) -> dict[str, AgentStateModel]:
+    result: dict[str, AgentStateModel] = {}
     for aid, agent in engine.agents.items():
         frame = telemetry_frame_from_engine(engine, aid)
         result[aid] = AgentStateModel(
@@ -104,8 +102,8 @@ def agent_state_from_engine(engine: SimulationEngine) -> Dict[str, AgentStateMod
     return result
 
 
-def casualty_state_from_engine(engine: SimulationEngine) -> Dict[str, CasualtyStateModel]:
-    result: Dict[str, CasualtyStateModel] = {}
+def casualty_state_from_engine(engine: SimulationEngine) -> dict[str, CasualtyStateModel]:
+    result: dict[str, CasualtyStateModel] = {}
     for cid, casualty in engine.casualties.items():
         transport_status = (
             casualty.transport_status.value
@@ -127,8 +125,8 @@ def casualty_state_from_engine(engine: SimulationEngine) -> Dict[str, CasualtySt
     return result
 
 
-def building_state_from_engine(engine: SimulationEngine) -> Dict[str, BuildingStateModel]:
-    result: Dict[str, BuildingStateModel] = {}
+def building_state_from_engine(engine: SimulationEngine) -> dict[str, BuildingStateModel]:
+    result: dict[str, BuildingStateModel] = {}
     for bid, building in engine.buildings.items():
         cells = [
             BuildingCellStateModel(

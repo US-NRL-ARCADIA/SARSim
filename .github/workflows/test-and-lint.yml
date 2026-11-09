@@ -22,10 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Runtime deps
-          python -m pip install numpy grpcio grpcio-tools protobuf websockets aiohttp
-          # Dev tools
-          python -m pip install pytest mypy ruff
+          python -m pip install -e ".[dev]"
 
       - name: Run Ruff
         run: python -m ruff check .
