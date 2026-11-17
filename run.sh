@@ -6,11 +6,12 @@ PYTHON="$ROOT_DIR/.venv/bin/python"
 UI_DIR="$ROOT_DIR/ui"
 
 if [ ! -x "$PYTHON" ]; then
-  echo "Python environment not found. Set it up with: python3.12 -m venv .venv && .venv/bin/python -m pip install -e '.[dev]'" >&2
+  echo "Python environment not found. Follow the Fresh installation section in README.md." >&2
+  echo "Be sure to upgrade pip before installing: .venv/bin/python -m pip install --upgrade pip setuptools wheel" >&2
   exit 1
 fi
 if [ ! -x "$UI_DIR/node_modules/.bin/react-scripts" ]; then
-  echo "UI dependencies not found. Set them up with: cd ui && npm ci" >&2
+  echo "UI dependencies not found. Install Node.js and npm, then run from the project root: npm --prefix ui ci" >&2
   exit 1
 fi
 
