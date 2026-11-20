@@ -19,7 +19,7 @@ The current implementation includes:
 ## Requirements
 
 - Git
-- Python 3.11 or newer; Python 3.12 is recommended and is the version used in CI
+- Python 3.11 through 3.13; Python 3.12 is recommended and is used in CI
 - Node.js 20 or newer with npm (required for the browser UI)
 - macOS or Linux for the provided shell scripts
 
@@ -32,16 +32,17 @@ below before cloning SARSim.
 The bootstrap installer checks the operating system, installs missing
 prerequisites, clones SARSim, creates `.venv`, and installs the Python and UI
 packages. It supports Apple Silicon and Intel macOS, plus Ubuntu- and
-Debian-based Windows Subsystem for Linux (WSL) distributions. From the empty
+Debian-based Windows Subsystem for Linux (WSL) distributions. From the parent
 directory where you want SARSim installed, run this single command:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | bash
 ```
 
-The current directory must either be empty or already contain a SARSim
-checkout. Do **not** run the command with `sudo`; the installer asks for
-administrator access only when a system package manager needs it.
+If the current directory is empty, it becomes the checkout. If it already
+contains other files, the installer uses a `SARSim` subdirectory. An existing
+SARSim checkout is reused. Do **not** run the command with `sudo`; the installer
+asks for administrator access only when a system package manager needs it.
 
 To install from a repository fork or a particular branch/tag while keeping the
 same one-command flow:
@@ -52,10 +53,11 @@ curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.
 ```
 
 The installer does not pull, reset, delete, or switch branches in an existing
-checkout. It also detects common problems such as an old Python or Node.js,
-root-owned npm files, an incomplete virtual environment, low disk space, WSL
-installation under `/mnt`, missing macOS Command Line Tools, and interrupted
-APT operations. On failure it prints targeted repair commands before exiting.
+checkout. It also detects common problems such as an unsupported Python or old
+Node.js, root-owned npm files, an incomplete virtual environment, low disk
+space, WSL installation under `/mnt`, missing native Pygame/SDL build packages,
+missing macOS Command Line Tools, and interrupted APT operations. On failure it
+prints targeted repair commands before exiting.
 
 To configure an existing clone, run the same curl command from its repository
 root or run `./install.sh` directly.
@@ -109,11 +111,12 @@ eval "$(/usr/local/bin/brew shellenv)"
 
 To determine which Mac you have, run `uname -m`.
 
-3. Install Git, Python 3.12, Node.js, and npm:
+3. Install Git, Python 3.12, Node.js/npm, and Pygame's native build libraries:
 
 ```sh
 brew update
-brew install git python@3.12 node
+brew install git python@3.12 node pkg-config \
+  sdl2 sdl2_image sdl2_mixer sdl2_ttf portmidi
 ```
 
 The Homebrew `node` package installs both the `node` command and the `npm`
@@ -138,7 +141,9 @@ module from Ubuntu, then install Node.js 22 (which includes npm) from NodeSource
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y git python3.12 python3.12-venv ca-certificates curl
+sudo apt-get install -y git python3.12 python3.12-venv ca-certificates curl \
+  build-essential pkg-config libfreetype6-dev libjpeg-dev libportmidi-dev \
+  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh
 sudo -E bash /tmp/nodesource_setup.sh
 sudo apt-get install -y nodejs
@@ -251,6 +256,11 @@ at `http://127.0.0.1:8000`. Press Ctrl+C in the terminal to stop both services.
 
 > **Open `http://localhost:3000` to use SARSim.** Port 8000 is the backend API
 > and does not contain the browser application.
+
+`run.sh` also checks the standard Apple Silicon and Intel Homebrew locations for
+Node.js and npm, even if Homebrew has not yet been added to the active shell's
+`PATH`. If UI packages are missing, it installs them from `package-lock.json`
+before starting.
 
 If startup reports that port 8000 or 3000 is already in use, another copy of
 the application (or another service) is running. On macOS, identify it with:

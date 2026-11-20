@@ -145,7 +145,8 @@ Usage:
   bash install.sh [--install-dir PATH] [--repo URL] [--ref BRANCH_OR_TAG]
 
 Options:
-  --install-dir PATH  Destination checkout (default: current directory)
+  --install-dir PATH  Destination checkout (default: current directory when
+                      empty, otherwise ./SARSim)
   --repo URL          Git repository to clone
   --ref REF           Branch or tag to clone
   -h, --help          Show this help
@@ -195,7 +196,13 @@ is_sarsim_checkout() {
 
 choose_install_directory() {
   [ -z "$INSTALL_DIR" ] || return 0
-  INSTALL_DIR="$PWD"
+
+  if is_sarsim_checkout "$PWD" || [ -z "$(ls -A "$PWD" 2>/dev/null)" ]; then
+    INSTALL_DIR="$PWD"
+  else
+    INSTALL_DIR="$PWD/SARSim"
+    note "The current directory is not empty; SARSim will be installed in $INSTALL_DIR."
+  fi
 }
 
 detect_platform() {
@@ -346,6 +353,12 @@ EOF
     run_step "Installing Node.js with Homebrew" "$brew_command" install node
   fi
 
+  if ! command -v pkg-config >/dev/null 2>&1 ||
+    ! pkg-config --exists sdl2 SDL2_image SDL2_mixer SDL2_ttf freetype2 2>/dev/null; then
+    run_step "Installing Pygame native build dependencies with Homebrew" \
+      "$brew_command" install pkg-config sdl2 sdl2_image sdl2_mixer sdl2_ttf portmidi
+  fi
+
   if "$brew_command" list --versions python@3.12 >/dev/null 2>&1; then
     PATH="$("$brew_command" --prefix python@3.12)/bin:$PATH"
   fi
@@ -364,7 +377,8 @@ apt_has_candidate() {
 python_supported() {
   candidate="$1"
   command -v "$candidate" >/dev/null 2>&1 &&
-    "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'
+    "$candidate" -c \
+      'import sys; raise SystemExit(0 if (3, 11) <= sys.version_info < (3, 14) else 1)'
 }
 
 find_python() {
@@ -411,7 +425,7 @@ install_wsl_python() {
   done
 
   if [ -z "$python_package" ] && [ "${ID:-}" = "ubuntu" ]; then
-    warn "This Ubuntu release does not provide Python 3.11+; enabling the deadsnakes PPA."
+    warn "This Ubuntu release does not provide Python 3.11-3.13; enabling the deadsnakes PPA."
     note "To avoid third-party repositories, cancel now and upgrade the WSL distribution instead."
     run_step "Installing the Ubuntu repository helper with APT" \
       sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
@@ -426,7 +440,7 @@ install_wsl_python() {
   if [ -z "$python_package" ]; then
     cat >&2 <<'EOF'
 
-No Python 3.11 or newer package is available for this WSL distribution.
+No Python 3.11 through 3.13 package is available for this WSL distribution.
 Upgrade the distribution, or install Python 3.12 and its venv module manually.
 For a new Ubuntu 24.04 distribution, run this in Windows PowerShell:
   wsl --install -d Ubuntu-24.04
@@ -478,6 +492,10 @@ EOF
   run_step "Refreshing APT package metadata" sudo apt-get update
   run_step "Installing Git, curl, and trusted certificates with APT" \
     sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y git curl ca-certificates
+  run_step "Installing Pygame native build dependencies with APT" \
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    build-essential pkg-config libfreetype6-dev libjpeg-dev libportmidi-dev \
+    libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
   install_wsl_python
   install_wsl_node
 }
@@ -489,9 +507,9 @@ select_python() {
     PYTHON_COMMAND="$(find_python || true)"
   fi
 
-  [ -n "$PYTHON_COMMAND" ] || die "Python 3.11 or newer was installed but is not on PATH."
+  [ -n "$PYTHON_COMMAND" ] || die "Python 3.11 through 3.13 was installed but is not on PATH."
   python_supported "$PYTHON_COMMAND" ||
-    die "$PYTHON_COMMAND is too old; SARSim requires Python 3.11 or newer."
+    die "$PYTHON_COMMAND is unsupported; SARSim requires Python 3.11 through 3.13."
   "$PYTHON_COMMAND" -m venv --help >/dev/null 2>&1 || {
     if [ "$PLATFORM" = "wsl" ]; then
       die "Python's venv module is missing. Install it with: sudo apt-get install python3-venv"
@@ -588,15 +606,20 @@ EOF
       exit 1
     fi
     if ! "$venv/bin/python" -c \
-      'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
-      cat >&2 <<EOF
-
-ERROR: $venv uses Python older than 3.11. Preserve it and retry with:
-  mv "$venv" "$venv.old-python"
-  bash "$INSTALL_DIR/install.sh"
-EOF
-      exit 1
+      'import sys; raise SystemExit(0 if (3, 11) <= sys.version_info < (3, 14) else 1)'; then
+      old_venv="$venv.unsupported-python"
+      suffix=1
+      while [ -e "$old_venv" ]; do
+        old_venv="$venv.unsupported-python.$suffix"
+        suffix=$((suffix + 1))
+      done
+      warn "$venv uses an unsupported Python version."
+      note "Preserving it at $old_venv and creating a Python 3.11-3.13 environment."
+      mv -- "$venv" "$old_venv"
     fi
+  fi
+
+  if [ -e "$venv" ]; then
     say "Reusing the existing Python virtual environment"
   else
     VENV_TEMP="$(mktemp -d "$INSTALL_DIR/.venv.install.XXXXXX")"
