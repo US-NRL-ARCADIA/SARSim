@@ -27,6 +27,41 @@ Do not use the `python3` bundled with macOS. It is commonly Python 3.9 and is
 too old for this project. Follow one of the prerequisite installation sections
 below before cloning SARSim.
 
+## Automated installation (macOS or WSL)
+
+The bootstrap installer checks the operating system, installs missing
+prerequisites, clones SARSim, creates `.venv`, and installs the Python and UI
+packages. It supports Apple Silicon and Intel macOS, plus Ubuntu- and
+Debian-based Windows Subsystem for Linux (WSL) distributions. From the empty
+directory where you want SARSim installed, run this single command:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | bash
+```
+
+The current directory must either be empty or already contain a SARSim
+checkout. Do **not** run the command with `sudo`; the installer asks for
+administrator access only when a system package manager needs it.
+
+To install from a repository fork or a particular branch/tag while keeping the
+same one-command flow:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | \
+  bash -s -- --repo https://github.com/OWNER/SARSim.git --ref BRANCH
+```
+
+The installer does not pull, reset, delete, or switch branches in an existing
+checkout. It also detects common problems such as an old Python or Node.js,
+root-owned npm files, an incomplete virtual environment, low disk space, WSL
+installation under `/mnt`, missing macOS Command Line Tools, and interrupted
+APT operations. On failure it prints targeted repair commands before exiting.
+
+To configure an existing clone, run the same curl command from its repository
+root or run `./install.sh` directly.
+Use the manual instructions below if the machine is managed and does not allow
+Homebrew, third-party APT repositories, or administrator access.
+
 ### macOS: install all prerequisites
 
 These steps work on both Apple Silicon and Intel Macs.
@@ -96,7 +131,7 @@ npm --version
 `python3.12 --version` must report Python 3.12.x, and `node --version` must
 report v20 or newer. Do not continue until all four commands succeed.
 
-### Ubuntu 24.04: install all prerequisites
+### Ubuntu 24.04 / WSL: install all prerequisites
 
 For Ubuntu 24.04, install Git, Python 3.12, and the Python virtual-environment
 module from Ubuntu, then install Node.js 22 (which includes npm) from NodeSource:
