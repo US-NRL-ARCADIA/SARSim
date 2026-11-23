@@ -38,7 +38,7 @@ class SceneViewer {
       </div>
       <div class="three-stage" data-three-stage>
         <div class="three-help">Drag to orbit · Shift/right-drag to pan · Scroll to zoom · Click an entity to select</div>
-        <div class="three-legend"><span><i class="three-swatch wall"></i>Wall</span><span><i class="three-swatch debris"></i>Debris</span><span><i class="three-swatch smoke"></i>Smoke</span><span><i class="three-swatch building"></i>Building</span><span><i class="three-swatch casualty"></i>Casualty</span><span><i class="three-swatch agent"></i>Agent</span></div>
+        <div class="three-legend"><span><i class="three-swatch wall"></i>Wall</span><span><i class="three-swatch debris"></i>Debris</span><span><i class="three-swatch smoke"></i>Smoke</span><span><i class="three-swatch building"></i>Building</span><span><i class="three-swatch casualty"></i>Casualty</span><span><i class="three-swatch agent"></i>Agent</span><span><i class="three-swatch ghost"></i>Unobserved ghost</span></div>
       </div>
     </div>`;
     this.stage = host.querySelector("[data-three-stage]");
@@ -157,6 +157,7 @@ class SceneViewer {
     this.buildBuildings(data);
     this.buildCasualties(data);
     this.buildAgents(data);
+    this.applyVisibilityGhosting(data);
     if (refit) this.fitCamera();
     this.render();
   }
@@ -279,6 +280,7 @@ class SceneViewer {
         const cover = this.box(0xa98356, [0.62, 0.1, 0.42], coord, 0.23);
         cover.material.transparent = true;
         cover.material.opacity = 0.78;
+        cover.userData.sarsim = { kind: "casualty", id: casualty.id, coord };
       }
     }
   }
@@ -372,6 +374,32 @@ class SceneViewer {
     return mesh;
   }
 
+  applyVisibilityGhosting(data) {
+    if (!data.visibleCellKeys) return;
+    for (const object of this.world.children) {
+      const subject = object.userData.sarsim;
+      if (!subject?.coord || data.visibleCellKeys.has(coordinateKey(subject.coord))) continue;
+      subject.ghosted = true;
+      object.traverse(child => {
+        child.castShadow = false;
+        child.receiveShadow = false;
+        const materials = Array.isArray(child.material) ? child.material : child.material ? [child.material] : [];
+        for (const material of materials) {
+          if (material.color) {
+            const luminance = material.color.r * 0.299 + material.color.g * 0.587 + material.color.b * 0.114;
+            const gray = 0.48 + luminance * 0.28;
+            material.color.setRGB(gray, gray, gray);
+          }
+          if (material.emissive) material.emissive.setRGB(0, 0, 0);
+          material.transparent = true;
+          material.opacity = Math.max(0.12, material.opacity * 0.34);
+          material.depthWrite = false;
+          material.needsUpdate = true;
+        }
+      });
+    }
+  }
+
   position(value, lift = 0) {
     const coord = coordinate(value);
     return new THREE.Vector3(coord.x - this.half + 0.5, coord.z * layerHeight + lift, coord.y - this.half + 0.5);
@@ -393,7 +421,7 @@ class SceneViewer {
     for (const hit of hits) {
       let object = hit.object;
       while (object && !object.userData.sarsim) object = object.parent;
-      if (object?.userData.sarsim) {
+      if (object?.userData.sarsim && !object.userData.sarsim.ghosted) {
         this.onSelect(object.userData.sarsim);
         return;
       }
@@ -470,16 +498,16 @@ function normalizeScene(source, options = {}) {
     };
   }
   const visible = options.visibleCells || null;
-  const canSee = value => !visible || visible.has(coordinateKey(coordinate(value)));
   return {
     size: source.grid_size,
     levels: source.z_levels,
-    cells: (source.grid_cells || []).filter(canSee),
-    agents: Object.values(source.agents || {}).filter(canSee),
-    casualties: Object.values(source.casualties || {}).filter(canSee),
-    buildings: Object.values(source.buildings || {}).map(building => ({ ...building, cells: (building.cells || []).filter(canSee) })).filter(building => building.cells.length),
-    zones: (source.zones || []).map(zone => ({ ...zone, cells: (zone.cells || []).filter(canSee) })).filter(zone => zone.cells.length),
+    cells: source.grid_cells || [],
+    agents: Object.values(source.agents || {}),
+    casualties: Object.values(source.casualties || {}),
+    buildings: Object.values(source.buildings || {}),
+    zones: source.zones || [],
     visibleCells: visible ? [...visible].map(parseCoordinateKey) : [],
+    visibleCellKeys: visible,
     sensorRegime: options.sensorRegime || "FULL",
   };
 }

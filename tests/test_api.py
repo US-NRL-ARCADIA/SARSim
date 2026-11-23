@@ -51,6 +51,10 @@ def test_static_ui_assets_are_served() -> None:
     assert "hospitalStackLevel * casualtyStackHeight" in scene_response.text
     assert "buildVisibilityFootprint" in scene_response.text
     assert "options.visibleCells" in scene_response.text
+    assert "applyVisibilityGhosting" in scene_response.text
+    assert "visibleCellKeys" in scene_response.text
+    assert "subject.ghosted = true" in scene_response.text
+    assert ".filter(canSee)" not in scene_response.text
 
     three_response = client.get("/ui/vendor/three.module.js")
     assert three_response.status_code == 200
@@ -96,11 +100,16 @@ def test_ui_exposes_keyboard_controls_scenario_picker_and_map_legend() -> None:
     assert 'data-editor-field="sensor-regime"' in app_js
     assert 'data-editor-field="sensor-range"' in app_js
     assert "MINIGRID_3" in app_js
-    assert 'scene3d.js?v=4' in app_js
+    assert 'scene3d.js?v=5' in app_js
     assert "runtimeVisibility" in app_js
     assert 'class="sensor-banner"' in app_js
     assert "visibleCells:runtimeVisibility()" in app_js
-    assert ".cell.unseen" in client.get("/ui/styles.css").text
+    styles = client.get("/ui/styles.css").text
+    assert ".cell.unseen" in styles
+    assert "filter: grayscale(1)" in styles
+    assert "isVisible?cellBadge" not in app_js
+    assert "isVisible?(a?" not in app_js
+    assert 'transport_status!=="LOADED"&&sees(c)' not in app_js
     assert 'data-workspace-mode="simulation"' in index_html
     assert 'data-workspace-mode="editing"' in index_html
     assert 'simulation:["simulator","scene3d","controls","inspector","events"]' in app_js
@@ -135,6 +144,10 @@ def test_bundled_scenarios_are_listed_and_loadable() -> None:
     )
     assert field_hospital["name"] == "Field Hospital Transport Demo Scenario"
     assert "designated field hospital" in field_hospital["description"]
+    assert field_hospital["sensor_regime"] == "MINIGRID_3"
+    regimes = {scenario["sensor_regime"] for scenario in scenarios}
+    assert regimes == {"FULL", "FOV_CONE", "MINIGRID_3"}
+    assert sum(scenario["sensor_regime"] != "FULL" for scenario in scenarios) >= 10
 
     showcase_expectations = {
         "editor/vertical_city_rescue.json": (8, 10),

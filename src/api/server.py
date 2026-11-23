@@ -179,11 +179,18 @@ def list_scenarios() -> list[dict[str, str]]:
             metadata = {}
         raw_name = metadata.get("name")
         raw_description = metadata.get("description")
+        perception = payload.get("perception")
+        sensor_regime = (
+            str(perception.get("regime", "FULL"))
+            if isinstance(perception, dict)
+            else "FULL"
+        )
         scenarios.append(
             {
                 "name": str(raw_name) if raw_name else path.stem.replace("_", " ").title(),
                 "path": f"editor/{path.name}",
                 "description": str(raw_description) if raw_description else "",
+                "sensor_regime": sensor_regime,
             }
         )
     return scenarios

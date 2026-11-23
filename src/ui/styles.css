@@ -201,14 +201,13 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .cell.agent-present { background-color: #e3eef8; }
 .cell.agent-present.agent-uav { background-color: #ece8f5; }
 .cell.unseen, .cell.unseen:disabled {
-  border-color: #283440;
-  background: repeating-linear-gradient(135deg, #26323e, #26323e 7px, #222c36 7px, #222c36 14px);
-  box-shadow: inset 0 0 14px rgb(0 0 0 / 28%);
-  color: transparent;
-  opacity: 1;
+  border-color: #b5bec7;
+  color: #65717c;
+  filter: grayscale(1) contrast(.72);
+  opacity: .58;
   cursor: default;
 }
-.cell.unseen .coord { color: #53606c; }
+.cell.unseen .coord { color: #65717c; }
 .cell.smoke::after {
   content: "";
   position: absolute;
@@ -319,6 +318,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .three-swatch.building { background: #8175a7; }
 .three-swatch.casualty { background: #c47847; }
 .three-swatch.agent { background: #3f79a8; }
+.three-swatch.ghost { border-color: #939da6; background: rgb(154 163 171 / 42%); }
 .three-error { display: grid; place-items: center; height: 100%; padding: 30px; color: var(--red); text-align: center; }
 
 .stats, .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 13px; }
