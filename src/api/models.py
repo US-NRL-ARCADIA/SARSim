@@ -176,6 +176,13 @@ class ZoneStateModel(BaseModel):
     casualty_ids_under_care: list[str] = Field(default_factory=list)
 
 
+class SensorStateModel(BaseModel):
+    regime: str
+    range: int
+    cone_angle_degrees: float
+    visible_cells_by_agent: dict[str, list[CoordinateModel]] = Field(default_factory=dict)
+
+
 class StateSnapshotModel(BaseModel):
     tick: int
     temporal_constraint: TemporalConstraintStateModel | None = None
@@ -187,6 +194,7 @@ class StateSnapshotModel(BaseModel):
     casualties: dict[str, CasualtyStateModel]
     buildings: dict[str, BuildingStateModel]
     zones: list[ZoneStateModel] = Field(default_factory=list)
+    perception: SensorStateModel
     grid_cells: list[GridCellStateModel] = Field(default_factory=list)
     events: list[EventModel] = Field(default_factory=list)
 
@@ -213,3 +221,10 @@ class LoadScenarioFromPathRequest(BaseModel):
 
 class LoadScenarioRequest(BaseModel):
     scenario: ScenarioDefinition
+
+
+class GenerateScenarioRequest(BaseModel):
+    grid_size: int = Field(default=10, ge=2, le=50)
+    z_depth: int = Field(default=3, ge=1, le=10)
+    agent_count: int = Field(default=2, ge=0, le=100)
+    seed: int | None = 42

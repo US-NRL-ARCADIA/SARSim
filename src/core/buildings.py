@@ -37,8 +37,7 @@ class Building:
             return
 
         building_cell.collapsed = True
-        ground_coord = Coordinate(x=cell_coord.x, y=cell_coord.y, z=0)
-        grid.set_cell_status(ground_coord, CellStatus.PASSABLE)
+        grid.set_cell_status(cell_coord, CellStatus.PASSABLE)
 
         for casualty in casualties.values():
             if casualty.coord == cell_coord:

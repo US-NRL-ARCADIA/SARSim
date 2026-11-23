@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NRL SARSim Studio</title>
+  <link rel="stylesheet" href="/ui/vendor/goldenlayout-base.css">
+  <link rel="stylesheet" href="/ui/styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img class="nrl-logo" src="/ui/nrl-official.jpg" alt="U.S. Naval Research Laboratory">
+      <span class="product-name"><strong>SARSim</strong><small>Search &amp; Rescue Simulation</small></span>
+    </div>
+    <div class="workspace-switch" role="group" aria-label="Workspace mode">
+      <button type="button" data-workspace-mode="simulation">Simulation</button>
+      <button type="button" data-workspace-mode="editing">Scenario editor</button>
+    </div>
+    <div class="status"><i id="status-dot"></i><span id="status-label">Connecting</span><em>Cycle <b id="tick">—</b></em><em>Agents <b id="agent-count">—</b></em></div>
+    <nav>
+      <select id="add-panel" aria-label="Add panel">
+        <option value="">+ Add panel</option><option value="simulator">Simulation map</option><option value="scene3d">3D scene</option><option value="controls">Mission controls</option><option value="inspector">Inspector</option><option value="events">Event stream</option>
+      </select>
+      <button id="save-layout">Save layout</button><button id="reset-layout">Reset layout</button><a href="/docs" target="_blank">API docs ↗</a>
+    </nav>
+  </header>
+  <main id="layout"></main>
+  <aside id="toast" role="status"></aside>
+  <script type="module" src="/ui/app.js?v=14"></script>
+</body>
+</html>

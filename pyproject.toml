@@ -1,33 +1,45 @@
 [project]
 name = "sarsim"
 version = "0.1.0"
-description = "Search-and-rescue simulation environment with gRPC/WebSocket API."
+description = "Search-and-rescue simulation with Gymnasium, HTTP API, and integrated editor."
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy",
     "fastapi",
     "uvicorn",
-    "grpcio",
-    "grpcio-tools",
-    "protobuf",
-    "websockets",
-    "aiohttp",
-    "pygame",
+    "gymnasium>=1.0,<2",
 ]
 
-[project.optional-dependencies]
+[project.scripts]
+sarsim = "src.cli:main"
+
+[dependency-groups]
 dev = [
     "pytest==9.2.0",
     "mypy==2.4.1",
     "ruff==0.17.4",
-    "httpx==0.28.1",
     "httpx2==2.16.0",
 ]
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+src = [
+    "ui/*.css",
+    "ui/*.html",
+    "ui/*.jpg",
+    "ui/*.js",
+    "ui/vendor/*.css",
+    "ui/vendor/*.js",
+    "ui/vendor/*.txt",
+]
 
 [tool.ruff]
 line-length = 100

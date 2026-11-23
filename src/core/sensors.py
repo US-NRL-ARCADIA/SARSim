@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
+from functools import lru_cache
 from math import atan2, degrees, hypot
 
 from .entities import Agent, AgentClass, Casualty, Orientation
@@ -91,13 +93,14 @@ def _orientation_bearing_degrees(orientation: Orientation) -> float:
     return _bearing_degrees(dx, dy)
 
 
-def _line_points(origin: Coordinate, target: Coordinate) -> list[Coordinate]:
+@lru_cache(maxsize=32_768)
+def _line_points(origin: Coordinate, target: Coordinate) -> tuple[Coordinate, ...]:
     dx = target.x - origin.x
     dy = target.y - origin.y
     dz = target.z - origin.z
     steps = max(abs(dx), abs(dy), abs(dz))
     if steps == 0:
-        return []
+        return ()
 
     points: list[Coordinate] = []
     x, y, z = origin.x, origin.y, origin.z
@@ -154,7 +157,7 @@ def _line_points(origin: Coordinate, target: Coordinate) -> list[Coordinate]:
             err_y += dy2
             points.append(Coordinate(x=x, y=y, z=z))
 
-    return points
+    return tuple(points)
 
 
 def raycast(
@@ -203,6 +206,7 @@ def _observe_target(
     target: Coordinate,
     agent_class: AgentClass,
     smoke_obscures_at: float,
+    opaque_coords: set[Coordinate] | None = None,
 ) -> ObservationSample:
     line = _line_points(origin, target)
     visible = True
@@ -226,7 +230,8 @@ def _observe_target(
                 obscured_by_smoke=obscured_by_smoke,
             )
 
-        if smoke >= smoke_obscures_at:
+        smoke_blocks = smoke > 0.0 if smoke_obscures_at <= 0.0 else smoke >= smoke_obscures_at
+        if smoke_blocks:
             return ObservationSample(
                 coord=target,
                 is_visible=False,
@@ -236,7 +241,9 @@ def _observe_target(
                 obscured_by_smoke=True,
             )
 
-        if cell_status == CellStatus.IMPASSABLE:
+        if cell_status == CellStatus.IMPASSABLE or (
+            opaque_coords is not None and point in opaque_coords
+        ):
             return ObservationSample(
                 coord=target,
                 is_visible=False,
@@ -263,6 +270,7 @@ def raycast_radial(
     radius: int,
     agent_class: AgentClass,
     smoke_obscures_at: float = 1.0,
+    opaque_coords: set[Coordinate] | None = None,
 ) -> list[ObservationSample]:
     """Return visible/observed cells within a radius using LOS checks."""
 
@@ -283,6 +291,7 @@ def raycast_radial(
                     target=target,
                     agent_class=agent_class,
                     smoke_obscures_at=smoke_obscures_at,
+                    opaque_coords=opaque_coords,
                 )
             )
 
@@ -301,6 +310,7 @@ def raycast_cone(
     agent_class: AgentClass,
     angle_degrees: float = 90.0,
     smoke_obscures_at: float = 1.0,
+    opaque_coords: set[Coordinate] | None = None,
 ) -> list[ObservationSample]:
     """Return visible/observed cells within a forward-facing cone."""
 
@@ -332,12 +342,40 @@ def raycast_cone(
                     target=target,
                     agent_class=agent_class,
                     smoke_obscures_at=smoke_obscures_at,
+                    opaque_coords=opaque_coords,
                 )
             )
 
     observations.sort(
         key=lambda sample: (sample.coord.y, sample.coord.x, sample.coord.z)
     )
+    return observations
+
+
+def observe_targets(
+    grid: SpatialGrid,
+    casualties: dict[str, Casualty],
+    origin: Coordinate,
+    targets: Iterable[Coordinate],
+    agent_class: AgentClass,
+    smoke_obscures_at: float = 1.0,
+    opaque_coords: set[Coordinate] | None = None,
+) -> list[ObservationSample]:
+    """Observe an arbitrary footprint using the standard line-of-sight rules."""
+    observations = [
+        _observe_target(
+            grid=grid,
+            casualties=casualties,
+            origin=origin,
+            target=target,
+            agent_class=agent_class,
+            smoke_obscures_at=smoke_obscures_at,
+            opaque_coords=opaque_coords,
+        )
+        for target in targets
+        if target != origin and grid.is_in_bounds(target)
+    ]
+    observations.sort(key=lambda sample: (sample.coord.y, sample.coord.x, sample.coord.z))
     return observations
 
 
@@ -361,6 +399,7 @@ def get_agent_view(
     cone_angle_degrees: float = 90.0,
     radial_range: int | None = None,
     smoke_obscures_at: float = 1.0,
+    opaque_coords: set[Coordinate] | None = None,
 ) -> AgentView:
     """Return a perception summary for the agent."""
 
@@ -383,6 +422,7 @@ def get_agent_view(
         agent_class=agent.agent_class,
         angle_degrees=cone_angle_degrees,
         smoke_obscures_at=smoke_obscures_at,
+        opaque_coords=opaque_coords,
     )
     radial_samples = raycast_radial(
         grid=grid,
@@ -391,6 +431,7 @@ def get_agent_view(
         radius=radial_range if radial_range is not None else max_range,
         agent_class=agent.agent_class,
         smoke_obscures_at=smoke_obscures_at,
+        opaque_coords=opaque_coords,
     )
 
     return AgentView(

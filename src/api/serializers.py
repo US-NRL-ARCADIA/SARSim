@@ -8,9 +8,11 @@ from src.api.models import (
     BuildingCellStateModel,
     BuildingStateModel,
     CasualtyStateModel,
+    CoordinateModel,
     EventModel,
     GridCellStateModel,
     ObservationSampleModel,
+    SensorStateModel,
     TelemetryFrameModel,
     TemporalConstraintStateModel,
     ZoneCellModel,
@@ -18,6 +20,7 @@ from src.api.models import (
 )
 from src.core.engine import SimulationEngine
 from src.core.events import Event
+from src.core.perception import SensorRegime, perception_filter_for
 from src.core.sensors import ObservationSample, get_agent_view
 from src.core.types import CellStatus
 
@@ -163,6 +166,27 @@ def zones_from_engine(engine: SimulationEngine) -> list[ZoneStateModel]:
             )
         )
     return result
+
+
+def sensor_state_from_engine(engine: SimulationEngine) -> SensorStateModel:
+    config = engine.sensor_config
+    visible_cells_by_agent: dict[str, list[CoordinateModel]] = {}
+    if config.regime is not SensorRegime.FULL:
+        perception_filter = perception_filter_for(config)
+        for agent_id, agent in engine.agents.items():
+            cells = sorted(
+                perception_filter.visible_cells(engine, agent),
+                key=lambda coord: (coord.z, coord.y, coord.x),
+            )
+            visible_cells_by_agent[agent_id] = [
+                CoordinateModel(x=coord.x, y=coord.y, z=coord.z) for coord in cells
+            ]
+    return SensorStateModel(
+        regime=config.regime.value,
+        range=config.max_range,
+        cone_angle_degrees=config.cone_angle_degrees,
+        visible_cells_by_agent=visible_cells_by_agent,
+    )
 
 
 def temporal_constraint_from_engine(engine: SimulationEngine) -> TemporalConstraintStateModel | None:

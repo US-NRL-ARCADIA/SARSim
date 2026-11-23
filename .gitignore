@@ -31,11 +31,5 @@ env/
 # Ruff
 .ruff_cache/
 
-# Node / frontend
-ui/node_modules/
-
 # Logs
 *.log
-editor/last_scenario.json
-
-docs

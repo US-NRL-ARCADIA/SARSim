@@ -10,6 +10,7 @@ from .buildings import Building
 from .casualties import Casualty
 from .events import Event, EventType
 from .grid import Coordinate, SpatialGrid
+from .perception import SensorConfig
 from .sensors import AgentBeliefState, AgentView, get_agent_view, update_belief_state
 from .types import TransportStatus
 
@@ -43,11 +44,24 @@ class SimulationEngine:
     agent_beliefs: dict[str, AgentBeliefState] = field(default_factory=dict)
     latest_agent_views: dict[str, AgentView] = field(default_factory=dict)
     telemetry_log: list[dict[str, Any]] = field(default_factory=list)
+    sensor_config: SensorConfig = field(default_factory=SensorConfig)
+    perception_enabled: bool = True
     event_type_enum = EventType
 
     def add_agent(self, agent: Agent) -> None:
-        self.agents[agent.id] = agent
+        if agent.id in self.agents:
+            raise ValueError(f"Duplicate agent id: {agent.id}")
+        occupant = next(
+            (existing for existing in self.agents.values() if existing.coord == agent.coord),
+            None,
+        )
+        if occupant is not None:
+            raise ValueError(
+                f"Agents {occupant.id} and {agent.id} cannot share coordinate "
+                f"({agent.coord.x}, {agent.coord.y}, {agent.coord.z})"
+            )
         self.grid.add_entity(agent.coord, agent)
+        self.agents[agent.id] = agent
         self.agent_beliefs[agent.id] = AgentBeliefState(agent_id=agent.id)
 
     def add_casualty(self, casualty: Casualty) -> None:
@@ -106,8 +120,10 @@ class SimulationEngine:
         # 5) Apply any actions that are ready.
         self._apply_ready_actions()
 
-        # 6) Refresh per-agent observations/beliefs.
-        self._update_agent_observations()
+        # 6) Refresh per-agent observations/beliefs when requested. Gymnasium
+        # environments use their own observation filters and disable this work.
+        if self.perception_enabled:
+            self._update_agent_observations()
 
         constraint = self.temporal_constraint
         if constraint is not None and self.current_tick >= int(constraint["deadline_cycles"]):

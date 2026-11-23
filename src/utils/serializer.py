@@ -8,6 +8,7 @@ from src.core.casualties import Casualty, LivingState, TriageState
 from src.core.engine import SimulationEngine
 from src.core.events import Event, EventType
 from src.core.grid import Coordinate, SpatialGrid
+from src.core.perception import SensorConfig, SensorRegime
 from src.core.sensors import AgentBeliefCell, AgentBeliefState
 from src.core.types import CellStatus, DamageStatus, TransportStatus
 
@@ -94,6 +95,7 @@ def serialize_engine_state(engine: SimulationEngine) -> SerializedState:
         "temporal_constraint": engine.temporal_constraint,
         "ended": engine.ended,
         "success": engine.success,
+        "perception": _serialize_sensor_config(engine.sensor_config),
         "agent_beliefs": {
             agent_id: {
                 "cells": [
@@ -132,6 +134,7 @@ def deserialize_engine_state(data: SerializedState) -> SimulationEngine:
         grid.set_smoke_density(coord, float(cell["smoke_density"]))
 
     engine = SimulationEngine(grid=grid)
+    engine.sensor_config = _deserialize_sensor_config(data.get("perception", {}))
     engine.current_tick = int(data.get("tick", 0))
 
     casualties_by_id: dict[str, Casualty] = {}
@@ -314,6 +317,7 @@ def serialize_scenario_definition(
         "scheduled_events": scheduled_events or [],
         "objectives": objectives or {},
         "evaluation": evaluation or {},
+        "perception": _serialize_sensor_config(engine.sensor_config),
     }
 
 
@@ -357,6 +361,9 @@ def deserialize_scenario_definition(data: ScenarioDefinition) -> dict[str, Any]:
         "scheduled_events": list(data.get("scheduled_events", [])),
         "objectives": objectives,
         "evaluation": dict(data.get("evaluation", {})),
+        "perception": _serialize_sensor_config(
+            _deserialize_sensor_config(data.get("perception", {}))
+        ),
     }
 
 
@@ -375,6 +382,7 @@ def build_engine_from_scenario_definition(data: ScenarioDefinition) -> Simulatio
         grid.set_smoke_density(coord, float(smoke["density"]))
 
     engine = SimulationEngine(grid=grid)
+    engine.sensor_config = _deserialize_sensor_config(scenario["perception"])
 
     casualties_by_id: dict[str, Casualty] = {}
     for casualty_data in scenario["casualties"]:
@@ -434,6 +442,37 @@ def _deserialize_coordinate(x: int, y: int, z: int) -> Coordinate:
 
 def _deserialize_coordinate_from_dict(data: dict[str, int]) -> Coordinate:
     return _deserialize_coordinate(data["x"], data["y"], data["z"])
+
+
+def _serialize_sensor_config(config: SensorConfig) -> dict[str, object]:
+    return {
+        "regime": config.regime.value,
+        "range": config.max_range,
+        "cone_angle_degrees": config.cone_angle_degrees,
+    }
+
+
+def _deserialize_sensor_config(raw: object) -> SensorConfig:
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        raise TypeError("perception must be an object")
+    try:
+        regime = SensorRegime(str(raw.get("regime", SensorRegime.FULL.value)))
+    except ValueError as exc:
+        choices = ", ".join(regime.value for regime in SensorRegime)
+        raise ValueError(f"perception.regime must be one of: {choices}") from exc
+    max_range = raw.get("range", 4)
+    angle = raw.get("cone_angle_degrees", 90.0)
+    if isinstance(max_range, bool) or not isinstance(max_range, int) or max_range < 1:
+        raise ValueError("perception.range must be a positive integer")
+    if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not 0 < angle <= 360:
+        raise ValueError("perception.cone_angle_degrees must be in (0, 360]")
+    return SensorConfig(
+        regime=regime,
+        max_range=max_range,
+        cone_angle_degrees=float(angle),
+    )
 
 
 def _enum_or_value(value: object) -> object:

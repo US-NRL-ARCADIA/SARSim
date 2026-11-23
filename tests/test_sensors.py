@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.core.engine import SimulationEngine
 from src.core.entities import (
     Agent,
     AgentClass,
@@ -10,6 +11,7 @@ from src.core.entities import (
     TriageState,
 )
 from src.core.grid import CellStatus, SpatialGrid
+from src.core.perception import MiniGridThreeWideFilter
 from src.core.sensors import (
     AgentBeliefState,
     AgentView,
@@ -214,6 +216,93 @@ def test_raycast_cone_marks_cells_behind_dense_smoke_unknown() -> None:
     assert not by_coord[hidden].is_visible
     assert by_coord[hidden].cell_status is None
     assert by_coord[hidden].obscured_by_smoke
+
+
+def test_raycast_cone_can_treat_any_smoke_as_opaque() -> None:
+    grid = _make_grid()
+    smoke_coord = Coordinate(x=2, y=2, z=0)
+    hidden = Coordinate(x=3, y=2, z=0)
+    grid.set_smoke_density(smoke_coord, 0.01)
+
+    observations = raycast_cone(
+        grid=grid,
+        casualties={},
+        origin=Coordinate(x=1, y=2, z=0),
+        orientation=Orientation.EAST,
+        max_range=3,
+        agent_class=AgentClass.UGV,
+        angle_degrees=60.0,
+        smoke_obscures_at=0.0,
+    )
+
+    by_coord = {sample.coord: sample for sample in observations}
+    assert by_coord[smoke_coord].is_visible
+    assert not by_coord[hidden].is_visible
+    assert by_coord[hidden].obscured_by_smoke
+
+
+def test_raycast_cone_can_use_building_cells_as_opaque() -> None:
+    grid = _make_grid()
+    building = Coordinate(x=2, y=2, z=0)
+    hidden = Coordinate(x=3, y=2, z=0)
+
+    observations = raycast_cone(
+        grid=grid,
+        casualties={},
+        origin=Coordinate(x=1, y=2, z=0),
+        orientation=Orientation.EAST,
+        max_range=3,
+        agent_class=AgentClass.UGV,
+        angle_degrees=60.0,
+        opaque_coords={building},
+    )
+
+    by_coord = {sample.coord: sample for sample in observations}
+    assert by_coord[building].is_visible
+    assert not by_coord[hidden].is_visible
+
+
+def test_minigrid_filter_is_three_wide_and_rotates_with_agent() -> None:
+    engine = SimulationEngine(grid=SpatialGrid(N=7, Z=1))
+    agent = Agent(
+        id="A1",
+        coord=Coordinate(x=3, y=5, z=0),
+        orientation=Orientation.NORTH,
+        agent_class=AgentClass.UGV,
+    )
+    engine.add_agent(agent)
+    perception_filter = MiniGridThreeWideFilter(max_range=4)
+
+    visible_north = perception_filter.visible_cells(engine, agent)
+
+    assert len(visible_north) == 12
+    assert {coord.x for coord in visible_north} == {2, 3, 4}
+    assert {coord.y for coord in visible_north} == {2, 3, 4, 5}
+    assert Coordinate(x=3, y=1, z=0) not in visible_north
+
+    agent.orientation = Orientation.EAST
+    visible_east = perception_filter.visible_cells(engine, agent)
+    assert {coord.x for coord in visible_east} == {3, 4, 5, 6}
+    assert {coord.y for coord in visible_east} == {4, 5, 6}
+
+
+def test_minigrid_filter_obeys_wall_occlusion() -> None:
+    engine = SimulationEngine(grid=SpatialGrid(N=7, Z=1))
+    agent = Agent(
+        id="A1",
+        coord=Coordinate(x=3, y=5, z=0),
+        orientation=Orientation.NORTH,
+        agent_class=AgentClass.UGV,
+    )
+    engine.add_agent(agent)
+    wall = Coordinate(x=3, y=4, z=0)
+    engine.grid.set_cell_status(wall, CellStatus.IMPASSABLE)
+
+    visible = MiniGridThreeWideFilter(max_range=4).visible_cells(engine, agent)
+
+    assert wall in visible
+    assert Coordinate(x=3, y=3, z=0) not in visible
+    assert Coordinate(x=3, y=2, z=0) not in visible
 
 
 def test_line_of_sight_diagonal_blocking_uses_consistent_grid_traversal() -> None:

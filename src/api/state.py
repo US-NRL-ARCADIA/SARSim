@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -11,6 +12,7 @@ from src.utils.serializer import ScenarioDefinition, build_engine_from_scenario_
 
 grid = SpatialGrid(N=10, Z=3)
 engine = SimulationEngine(grid=grid)
+active_scenario_template: ScenarioDefinition | None = None
 
 
 def get_engine() -> SimulationEngine:
@@ -23,10 +25,21 @@ def set_engine(new_engine: SimulationEngine) -> SimulationEngine:
     return engine
 
 
+def set_active_scenario(
+    new_engine: SimulationEngine,
+    scenario: ScenarioDefinition,
+) -> SimulationEngine:
+    """Activate an engine and retain an immutable definition for scenario reset."""
+    global active_scenario_template
+    active_scenario_template = deepcopy(scenario)
+    return set_engine(new_engine)
+
+
 def load_engine_from_scenario_definition(
     scenario: ScenarioDefinition,
 ) -> SimulationEngine:
-    return set_engine(build_engine_from_scenario_definition(scenario))
+    new_engine = build_engine_from_scenario_definition(scenario)
+    return set_active_scenario(new_engine, scenario)
 
 
 def load_engine_from_scenario_file(filepath: str) -> SimulationEngine:
@@ -45,8 +58,16 @@ def load_engine_from_scenario_file(filepath: str) -> SimulationEngine:
 
 
 def reset_engine() -> SimulationEngine:
-    global engine
+    global active_scenario_template, engine
     grid_size = engine.grid.N
     z_levels = engine.grid.Z
     engine = SimulationEngine(grid=SpatialGrid(N=grid_size, Z=z_levels))
+    active_scenario_template = None
     return engine
+
+
+def reset_active_scenario() -> SimulationEngine:
+    """Rebuild the active scenario from its original loaded definition."""
+    if active_scenario_template is None:
+        raise ValueError("No active scenario is available to reset")
+    return load_engine_from_scenario_definition(deepcopy(active_scenario_template))

@@ -1,0 +1,1465 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "scenario_id": "vertical-city-rescue",
+    "name": "Vertical City Mass Rescue",
+    "description": "A dense five-level city block with three stackable towers, roof smoke, collapsed floors, two response zones, eight mixed agents, and ten casualties.",
+    "scenario_family": "3d-showcase"
+  },
+  "perception": {
+    "regime": "FOV_CONE",
+    "range": 5,
+    "cone_angle_degrees": 100.0
+  },
+  "grid": {
+    "N": 12,
+    "Z": 5,
+    "cells": [
+      {
+        "coord": {
+          "x": 0,
+          "y": 2,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 1,
+          "y": 4,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 1,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 8,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 8,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 8,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 9,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 9,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 9,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 3,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 3,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 3,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 3,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 4,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 4,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 4,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 4,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 8,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 8,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 8,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 8,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 3
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 3,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 3,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 3,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 3,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 3,
+          "z": 4
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 4
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 5,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 0,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 1,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 3,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 1,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 2,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 4,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 5,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 7,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 8,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 6,
+          "y": 10,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 7,
+          "y": 2,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 7,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 2,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 2,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 2,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 2,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 3,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 3,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 3,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 3,
+          "z": 3
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 2,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 2,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 2,
+          "z": 2
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 3,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 3,
+          "z": 1
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 3,
+          "z": 2
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 10,
+          "y": 4,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 10,
+          "y": 6,
+          "z": 0
+        },
+        "status": "IMPASSABLE"
+      },
+      {
+        "coord": {
+          "x": 11,
+          "y": 0,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      },
+      {
+        "coord": {
+          "x": 11,
+          "y": 5,
+          "z": 0
+        },
+        "status": "PASSABLE"
+      }
+    ],
+    "smoke": [
+      {
+        "coord": {
+          "x": 3,
+          "y": 3,
+          "z": 4
+        },
+        "density": 0.88
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 3
+        },
+        "density": 0.66
+      },
+      {
+        "coord": {
+          "x": 8,
+          "y": 2,
+          "z": 3
+        },
+        "density": 0.88
+      },
+      {
+        "coord": {
+          "x": 9,
+          "y": 3,
+          "z": 2
+        },
+        "density": 0.66
+      },
+      {
+        "coord": {
+          "x": 2,
+          "y": 8,
+          "z": 3
+        },
+        "density": 0.88
+      },
+      {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 2
+        },
+        "density": 0.66
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 0,
+          "z": 0
+        },
+        "density": 0.35
+      },
+      {
+        "coord": {
+          "x": 5,
+          "y": 1,
+          "z": 0
+        },
+        "density": 0.49
+      },
+      {
+        "coord": {
+          "x": 7,
+          "y": 2,
+          "z": 0
+        },
+        "density": 0.63
+      },
+      {
+        "coord": {
+          "x": 1,
+          "y": 4,
+          "z": 0
+        },
+        "density": 0.77
+      },
+      {
+        "coord": {
+          "x": 4,
+          "y": 5,
+          "z": 0
+        },
+        "density": 0.35
+      }
+    ]
+  },
+  "agents": [
+    {
+      "id": "UGV-1",
+      "coord": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "orientation": "NORTH",
+      "agent_class": "UGV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UAV-1",
+      "coord": {
+        "x": 10,
+        "y": 11,
+        "z": 2
+      },
+      "orientation": "EAST",
+      "agent_class": "UAV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UGV-2",
+      "coord": {
+        "x": 10,
+        "y": 0,
+        "z": 0
+      },
+      "orientation": "SOUTH",
+      "agent_class": "UGV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UAV-2",
+      "coord": {
+        "x": 9,
+        "y": 11,
+        "z": 1
+      },
+      "orientation": "WEST",
+      "agent_class": "UAV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UGV-3",
+      "coord": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      },
+      "orientation": "NORTH",
+      "agent_class": "UGV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UAV-3",
+      "coord": {
+        "x": 2,
+        "y": 11,
+        "z": 2
+      },
+      "orientation": "EAST",
+      "agent_class": "UAV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UGV-4",
+      "coord": {
+        "x": 1,
+        "y": 1,
+        "z": 0
+      },
+      "orientation": "SOUTH",
+      "agent_class": "UGV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    },
+    {
+      "id": "UAV-4",
+      "coord": {
+        "x": 1,
+        "y": 11,
+        "z": 1
+      },
+      "orientation": "WEST",
+      "agent_class": "UAV",
+      "busy_ticks_remaining": 0,
+      "damage_status": null,
+      "payload_casualty_id": null
+    }
+  ],
+  "casualties": [
+    {
+      "id": "C1",
+      "coord": {
+        "x": 5,
+        "y": 0,
+        "z": 0
+      },
+      "health": 90,
+      "decay_rate": 0.9,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C2",
+      "coord": {
+        "x": 11,
+        "y": 0,
+        "z": 0
+      },
+      "health": 84,
+      "decay_rate": 1.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C3",
+      "coord": {
+        "x": 5,
+        "y": 1,
+        "z": 0
+      },
+      "health": 78,
+      "decay_rate": 1.9,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C4",
+      "coord": {
+        "x": 0,
+        "y": 2,
+        "z": 0
+      },
+      "health": 72,
+      "decay_rate": 2.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C5",
+      "coord": {
+        "x": 7,
+        "y": 2,
+        "z": 0
+      },
+      "health": 66,
+      "decay_rate": 0.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C6",
+      "coord": {
+        "x": 5,
+        "y": 3,
+        "z": 0
+      },
+      "health": 60,
+      "decay_rate": 0.9,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C7",
+      "coord": {
+        "x": 1,
+        "y": 4,
+        "z": 0
+      },
+      "health": 54,
+      "decay_rate": 1.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C8",
+      "coord": {
+        "x": 10,
+        "y": 4,
+        "z": 0
+      },
+      "health": 48,
+      "decay_rate": 1.9,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C9",
+      "coord": {
+        "x": 4,
+        "y": 5,
+        "z": 0
+      },
+      "health": 42,
+      "decay_rate": 2.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    },
+    {
+      "id": "C10",
+      "coord": {
+        "x": 11,
+        "y": 5,
+        "z": 0
+      },
+      "health": 36,
+      "decay_rate": 0.4,
+      "is_covered": true,
+      "triage_state": "UNKNOWN",
+      "transport_status": "ON_GROUND",
+      "living_state": "ALIVE"
+    }
+  ],
+  "buildings": [
+    {
+      "id": "TOWER-1",
+      "cells": [
+        {
+          "coord": {
+            "x": 3,
+            "y": 3,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 3,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 3,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 3,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 3,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 3,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 3,
+            "z": 4
+          },
+          "integrity": 0.58,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 4,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 4,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 4,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 4,
+            "z": 3
+          },
+          "integrity": 0.16,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 4,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 4,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 4,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 4,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 4,
+            "y": 4,
+            "z": 4
+          },
+          "integrity": 0.58,
+          "collapsed": true
+        }
+      ]
+    },
+    {
+      "id": "TOWER-2",
+      "cells": [
+        {
+          "coord": {
+            "x": 8,
+            "y": 2,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 2,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 2,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 2,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 2,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 2,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 2,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 3,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 3,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 3,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 8,
+            "y": 3,
+            "z": 3
+          },
+          "integrity": 0.16,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 3,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 3,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 9,
+            "y": 3,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": true
+        }
+      ]
+    },
+    {
+      "id": "TOWER-3",
+      "cells": [
+        {
+          "coord": {
+            "x": 2,
+            "y": 8,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 2,
+            "y": 8,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 2,
+            "y": 8,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 8,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 8,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 8,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 8,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 2,
+            "y": 9,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 2,
+            "y": 9,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 2,
+            "y": 9,
+            "z": 2
+          },
+          "integrity": 0.16,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 9,
+            "z": 0
+          },
+          "integrity": 0.94,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 9,
+            "z": 1
+          },
+          "integrity": 0.85,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 9,
+            "z": 2
+          },
+          "integrity": 0.76,
+          "collapsed": false
+        },
+        {
+          "coord": {
+            "x": 3,
+            "y": 9,
+            "z": 3
+          },
+          "integrity": 0.67,
+          "collapsed": true
+        }
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "field-hospital-alpha",
+      "zone_type": "FIELD_HOSPITAL",
+      "cells": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        }
+      ],
+      "labels": [
+        "medical-dropoff",
+        "field-hospital"
+      ]
+    },
+    {
+      "id": "extraction-bravo",
+      "zone_type": "EXTRACTION",
+      "cells": [
+        {
+          "x": 11,
+          "y": 11,
+          "z": 0
+        },
+        {
+          "x": 10,
+          "y": 11,
+          "z": 0
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "z": 0
+        }
+      ],
+      "labels": [
+        "evacuation",
+        "extraction"
+      ]
+    }
+  ],
+  "scheduled_events": [
+    {
+      "event_id": "smoke-wave-1",
+      "tick": 12,
+      "event_type": "SMOKE_INCREASE",
+      "payload": {
+        "coord": {
+          "x": 4,
+          "y": 4,
+          "z": 3
+        },
+        "density": 0.82
+      }
+    },
+    {
+      "event_id": "smoke-wave-2",
+      "tick": 26,
+      "event_type": "SMOKE_INCREASE",
+      "payload": {
+        "coord": {
+          "x": 9,
+          "y": 3,
+          "z": 1
+        },
+        "density": 0.9
+      }
+    },
+    {
+      "event_id": "smoke-wave-3",
+      "tick": 40,
+      "event_type": "SMOKE_INCREASE",
+      "payload": {
+        "coord": {
+          "x": 3,
+          "y": 9,
+          "z": 2
+        },
+        "density": 0.98
+      }
+    }
+  ],
+  "objectives": {
+    "primary_goals": [
+      "coordinate the mixed UGV/UAV team",
+      "stabilize and transport casualties",
+      "navigate multi-level structures and smoke"
+    ],
+    "temporal_constraint": {
+      "type": "rescue_count",
+      "target_count": 5,
+      "deadline_cycles": 120
+    }
+  },
+  "evaluation": {
+    "expected_difficulty": "hard"
+  }
+}

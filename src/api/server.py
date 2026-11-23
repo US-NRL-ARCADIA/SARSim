@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.scenarios import seed_dev_scenario
 from src.api.serializers import (
@@ -13,21 +15,31 @@ from src.api.serializers import (
     casualty_state_from_engine,
     event_to_model,
     grid_cells_from_engine,
+    sensor_state_from_engine,
     telemetry_frame_from_engine,
     temporal_constraint_from_engine,
     zones_from_engine,
 )
 from src.api.state import (
     get_engine,
-    load_engine_from_scenario_definition,
     load_engine_from_scenario_file,
+    reset_active_scenario,
     reset_engine,
+    set_active_scenario,
 )
 from src.core.actions import EngineAction, EngineActionType
-from src.core.grid import Coordinate
+from src.core.engine import SimulationEngine
+from src.core.grid import Coordinate, SpatialGrid
+from src.utils.generator import generate_scenario
+from src.utils.serializer import (
+    ScenarioDefinition,
+    build_engine_from_scenario_definition,
+    serialize_scenario_definition,
+)
 
 from .models import (
     ApiEngineActionType,
+    GenerateScenarioRequest,
     LoadScenarioFromPathRequest,
     LoadScenarioRequest,
     QueueActionsRequest,
@@ -37,15 +49,10 @@ from .models import (
 )
 
 app = FastAPI(title="SARSim API")
-
-# Optional: CORS for a web UI.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = PACKAGE_ROOT.parent
+UI_DIR = PACKAGE_ROOT / "ui"
+SCENARIO_DIR = PROJECT_ROOT / "editor"
 
 
 _API_TO_ENGINE_ACTION_TYPE = {
@@ -64,6 +71,11 @@ _API_TO_ENGINE_ACTION_TYPE = {
 }
 
 
+@app.get("/health", include_in_schema=False)
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @app.get("/state", response_model=StateSnapshotModel)
 def get_state() -> StateSnapshotModel:
     engine = get_engine()
@@ -78,6 +90,7 @@ def get_state() -> StateSnapshotModel:
         casualties=casualty_state_from_engine(engine),
         buildings=building_state_from_engine(engine),
         zones=zones_from_engine(engine),
+        perception=sensor_state_from_engine(engine),
         grid_cells=grid_cells_from_engine(engine),
         events=[event_to_model(event) for event in engine.events[-200:]],
     )
@@ -133,23 +146,125 @@ async def events_stream(ws: WebSocket) -> None:
             await asyncio.sleep(0.1)
     except WebSocketDisconnect:
         return
-    
+
+
 @app.post("/init/dev")
 def init_dev() -> dict[str, str]:
-    seed_dev_scenario(get_engine())
+    engine = SimulationEngine(grid=SpatialGrid(N=10, Z=3))
+    seed_dev_scenario(engine)
+    scenario = serialize_scenario_definition(
+        engine,
+        metadata={"scenario_id": "dev", "name": "Development scenario"},
+        zones=engine.zones,
+        scheduled_events=engine.scheduled_events,
+        objectives={"temporal_constraint": dict(engine.temporal_constraint or {})},
+    )
+    set_active_scenario(engine, scenario)
     return {"status": "ok"}
+
+
+@app.get("/scenarios")
+def list_scenarios() -> list[dict[str, str]]:
+    """List bundled scenario definitions available to the browser workspace."""
+    scenarios: list[dict[str, str]] = []
+    for path in sorted(SCENARIO_DIR.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict) or not isinstance(payload.get("grid"), dict):
+            continue
+        metadata = payload.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+        raw_name = metadata.get("name")
+        raw_description = metadata.get("description")
+        scenarios.append(
+            {
+                "name": str(raw_name) if raw_name else path.stem.replace("_", " ").title(),
+                "path": f"editor/{path.name}",
+                "description": str(raw_description) if raw_description else "",
+            }
+        )
+    return scenarios
+
+
+@app.post("/scenario/generate")
+def generate_authored_scenario(req: GenerateScenarioRequest) -> ScenarioDefinition:
+    """Generate the same deterministic research scenario used by the former editor."""
+    return generate_scenario(
+        grid_size=req.grid_size,
+        z_depth=req.z_depth,
+        building_density=0.08,
+        hazard_density=0.04,
+        casualty_density=0.06,
+        debris_density=0.05,
+        seed=req.seed,
+        agent_count=req.agent_count,
+    )
 
 
 @app.post("/scenario/load")
 def load_scenario(req: LoadScenarioRequest) -> dict[str, str]:
-    load_engine_from_scenario_definition(req.scenario)
+    candidate = _build_scenario(req.scenario)
+    set_active_scenario(candidate, req.scenario)
     return {"status": "ok"}
+
+
+@app.post("/scenario/validate")
+def validate_scenario(req: LoadScenarioRequest) -> dict[str, int | str]:
+    """Validate an authored scenario without changing the active simulation."""
+    candidate = _build_scenario(req.scenario)
+    return {
+        "status": "ok",
+        "agents": len(candidate.agents),
+        "casualties": len(candidate.casualties),
+        "buildings": len(candidate.buildings),
+        "zones": len(candidate.zones),
+    }
+
+
+@app.get("/scenario/current")
+def current_scenario() -> dict[str, object]:
+    """Export the active simulation as an editable scenario definition."""
+    engine = get_engine()
+    objectives: dict[str, object] = {}
+    if engine.temporal_constraint is not None:
+        objectives["temporal_constraint"] = dict(engine.temporal_constraint)
+    return serialize_scenario_definition(
+        engine,
+        metadata={"name": "Active SARSim scenario"},
+        zones=engine.zones,
+        scheduled_events=engine.scheduled_events,
+        objectives=objectives,
+    )
 
 
 @app.post("/scenario/load-from-path")
 def load_scenario_from_path(req: LoadScenarioFromPathRequest) -> dict[str, str]:
-    load_engine_from_scenario_file(req.filepath)
+    try:
+        load_engine_from_scenario_file(req.filepath)
+    except (IndexError, KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid scenario: {exc}") from exc
     return {"status": "ok"}
+
+
+@app.post("/scenario/reset")
+def reset_scenario() -> dict[str, str]:
+    """Restore the active scenario to the exact state in which it was loaded."""
+    try:
+        reset_active_scenario()
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"status": "ok"}
+
+
+def _build_scenario(scenario: ScenarioDefinition) -> SimulationEngine:
+    try:
+        return build_engine_from_scenario_definition(scenario)
+    except (IndexError, KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid scenario: {exc}") from exc
+
 
 @app.get("/telemetry", response_model=list[TelemetryFrameModel])
 def get_telemetry() -> list[TelemetryFrameModel]:
@@ -167,19 +282,10 @@ def reset() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-def root() -> str:
-    """Describe how to reach the UI when this process is API-only."""
-    return """
-    <!doctype html>
-    <html lang="en">
-      <head><title>SARSim API</title></head>
-      <body>
-        <h1>SARSim API</h1>
-        <p>This is the backend API, not the browser application.</p>
-        <p>Start the full application with <code>./run.sh</code>, then open
-        <a href="http://localhost:3000">http://localhost:3000</a>.</p>
-        <p><a href="/docs">API documentation</a></p>
-      </body>
-    </html>
-    """
+@app.get("/", response_class=FileResponse, include_in_schema=False)
+def root() -> FileResponse:
+    """Serve the dependency-free browser workspace from the API process."""
+    return FileResponse(UI_DIR / "index.html")
+
+
+app.mount("/ui", StaticFiles(directory=UI_DIR), name="ui")

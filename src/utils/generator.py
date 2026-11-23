@@ -79,13 +79,22 @@ class ScenarioGenerator:
             key = (coord.x, coord.y, coord.z)
             if any(key in building.cells for building in engine.buildings.values()):
                 continue
-            integrity = round(self.rng.uniform(0.2, 1.0), 3)
+            height = self.rng.randint(1, engine.grid.Z)
+            cells: dict[tuple[int, int, int], BuildingCell] = {}
+            for z in range(height):
+                level_coord = Coordinate(x=coord.x, y=coord.y, z=z)
+                level_key = (level_coord.x, level_coord.y, level_coord.z)
+                cells[level_key] = BuildingCell(
+                    coord=level_coord,
+                    integrity=round(self.rng.uniform(0.2, 1.0), 3),
+                    collapsed=False,
+                )
+                engine.grid.set_cell_status(level_coord, CellStatus.IMPASSABLE)
             building = Building(
                 id=f"B{placed + 1}",
-                cells={key: BuildingCell(coord=coord, integrity=integrity, collapsed=False)},
+                cells=cells,
             )
             engine.add_building(building)
-            engine.grid.set_cell_status(coord, CellStatus.IMPASSABLE)
             placed += 1
 
     def _place_hazards(self, engine: SimulationEngine, density: float) -> None:

@@ -2,339 +2,187 @@
 
 **DISTRIBUTION STATEMENT A. Approved for public release: distribution is unlimited.**
 
-SARSim is a search-and-rescue simulation backend for experimenting with agents, casualties, terrain hazards, and building interactions in a discrete grid world.
+SARSim is a search-and-rescue simulation environment for agent training,
+scenario authoring, and human-in-the-loop experimentation in a discrete 3D grid.
 
-## Current scope
+## What is included
 
-The current implementation includes:
-- a 3D spatial grid
-- UGV/UAV agent movement and orientation
-- casualty health decay, triage, transport, unloading, and field-hospital transfer behavior
-- building integrity, collapse, debris, and breach behavior
-- zones, including `FIELD_HOSPITAL` semantics
-- a tick-based simulation engine with queued actions and events
-- a FastAPI backend for state, telemetry, scenario loading, actions, stepping, reset, and event streaming
-- a React control console and a standalone Pygame scenario editor
+- Python simulation engine for UGV/UAV movement, casualties, hazards, buildings,
+  field hospitals, actions, events, sensors, and temporal objectives
+- full-state, FOV-cone, and MiniGrid-style Gymnasium environments registered as
+  `SARSim-v0`, `SARSim-FOV-v0`, and `SARSim-MiniGrid-v0`
+- FastAPI transport for interactive and remote clients
+- separate Simulation and Scenario editor workspace modes in one browser UI
+- draggable, resizable, independently persistent panels powered by vendored
+  GoldenLayout
+- interactive Three.js views of live and authored 3D scenes
+
+The browser frontend is committed as static HTML/CSS/JavaScript. It has no npm,
+Node.js, transpiler, or build step. The old Pygame editor and its SDL packages
+have also been removed.
 
 ## Requirements
 
-- Git
-- Python 3.11 through 3.13; Python 3.12 is recommended and is used in CI
-- Node.js 20 or newer with npm (required for the browser UI)
-- macOS or Linux for the provided shell scripts
+- [uv](https://docs.astral.sh/uv/) — the only dependency manager used by SARSim
+- Git (only needed to clone the repository)
 
-Do not use the `python3` bundled with macOS. It is commonly Python 3.9 and is
-too old for this project. Follow one of the prerequisite installation sections
-below before cloning SARSim.
+uv installs the correct Python version and all locked packages automatically.
 
-## Automated installation (macOS or WSL)
-
-The bootstrap installer checks the operating system, installs missing
-prerequisites, clones SARSim, creates `.venv`, and installs the Python and UI
-packages. It supports Apple Silicon and Intel macOS, plus Ubuntu- and
-Debian-based Windows Subsystem for Linux (WSL) distributions. From the parent
-directory where you want SARSim installed, run this single command:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | bash
-```
-
-If the current directory is empty, it becomes the checkout. If it already
-contains other files, the installer uses a `SARSim` subdirectory. An existing
-SARSim checkout is reused. Do **not** run the command with `sudo`; the installer
-asks for administrator access only when a system package manager needs it.
-
-To install from a repository fork or a particular branch/tag while keeping the
-same one-command flow:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | \
-  bash -s -- --repo https://github.com/OWNER/SARSim.git --ref BRANCH
-```
-
-The installer does not pull, reset, delete, or switch branches in an existing
-checkout. It also detects common problems such as an unsupported Python or old
-Node.js, root-owned npm files, an incomplete virtual environment, low disk
-space, WSL installation under `/mnt`, missing native Pygame/SDL build packages,
-missing macOS Command Line Tools, and interrupted APT operations. On failure it
-prints targeted repair commands before exiting.
-
-To configure an existing clone, run the same curl command from its repository
-root or run `./install.sh` directly.
-Use the manual instructions below if the machine is managed and does not allow
-Homebrew, third-party APT repositories, or administrator access.
-
-### macOS: install all prerequisites
-
-These steps work on both Apple Silicon and Intel Macs.
-
-1. Install Apple's Command Line Tools. Run:
-
-```sh
-if ! xcode-select -p >/dev/null 2>&1; then
-  xcode-select --install
-fi
-```
-
-If an installer window opens, finish it before running the next command. If the
-tools are already installed, this command makes no changes.
-
-2. Check whether [Homebrew](https://brew.sh/) is installed:
-
-```sh
-brew --version
-```
-
-If that prints `command not found`, install Homebrew with its official command:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-At the end of installation, Homebrew prints a `Next steps` command that adds
-`brew` to the shell path. Run the command it prints. If needed, use the matching
-commands below.
-
-Apple Silicon Mac (`arm64`):
-
-```sh
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
-eval "$(/opt/homebrew/bin/brew shellenv)"
-```
-
-Intel Mac (`x86_64`):
-
-```sh
-echo 'eval "$(/usr/local/bin/brew shellenv)"' >> "$HOME/.zprofile"
-eval "$(/usr/local/bin/brew shellenv)"
-```
-
-To determine which Mac you have, run `uname -m`.
-
-3. Install Git, Python 3.12, Node.js/npm, and Pygame's native build libraries:
-
-```sh
-brew update
-brew install git python@3.12 node pkg-config \
-  sdl2 sdl2_image sdl2_mixer sdl2_ttf portmidi
-```
-
-The Homebrew `node` package installs both the `node` command and the `npm`
-command. Do not run a separate npm installer.
-
-4. Confirm that every prerequisite is available:
-
-```sh
-git --version
-python3.12 --version
-node --version
-npm --version
-```
-
-`python3.12 --version` must report Python 3.12.x, and `node --version` must
-report v20 or newer. Do not continue until all four commands succeed.
-
-### Ubuntu 24.04 / WSL: install all prerequisites
-
-For Ubuntu 24.04, install Git, Python 3.12, and the Python virtual-environment
-module from Ubuntu, then install Node.js 22 (which includes npm) from NodeSource:
-
-```sh
-sudo apt-get update
-sudo apt-get install -y git python3.12 python3.12-venv ca-certificates curl \
-  build-essential pkg-config libfreetype6-dev libjpeg-dev libportmidi-dev \
-  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh
-sudo -E bash /tmp/nodesource_setup.sh
-sudo apt-get install -y nodejs
-git --version
-python3.12 --version
-node --version
-npm --version
-```
-
-Users of other Linux distributions must install the same prerequisite versions
-with their distribution's package manager before continuing.
-
-## Fresh installation
-
-After **all four prerequisite version commands succeed**, run the following
-commands from the directory where you want to clone SARSim. Copy the commands
-exactly; commands after `cd SARSim` must be run from the repository root.
+## Install
 
 ```sh
 git clone https://github.com/US-NRL-ARCADIA/SARSim.git
 cd SARSim
-
-# Use Python 3.12 explicitly so macOS does not select its older system Python.
-python3.12 -m venv .venv
-
-# This upgrade is required. Older pip versions cannot install this
-# pyproject.toml-based project in editable mode.
-./.venv/bin/python -m pip install --upgrade pip setuptools wheel
-./.venv/bin/python -m pip install -e ".[dev]"
-
-# Install the browser UI dependencies from the committed lock file.
-npm --prefix ui ci
+uv sync --frozen --no-dev
 ```
 
-The commands use the virtual environment's Python directly, so activating the
-environment is optional. To activate it for an interactive shell, run:
+Or use the bootstrap script, which installs uv when needed:
 
 ```sh
-source .venv/bin/activate
+curl -LsSf https://raw.githubusercontent.com/US-NRL-ARCADIA/SARSim/main/install.sh | bash
 ```
 
-Verify the installation before starting the application:
-
-```sh
-./.venv/bin/python --version
-./.venv/bin/python -m pytest
-npm --prefix ui run build
-```
-
-The Python test suite and UI production build should both finish successfully.
-`npm ci` currently reports warnings about deprecated transitive packages and an
-npm audit summary. Those warnings do not mean installation failed. Do not run
-`npm audit fix --force`, because it can replace locked dependencies with
-breaking versions. The `npm ci` command must exit successfully, and the final
-UI build must say that it compiled successfully.
-
-### Fixing an older pip installation
-
-If installation reports the following error:
-
-```text
-File "setup.py" or "setup.cfg" not found. Directory cannot be installed in editable mode
-```
-
-the virtual environment is using a version of pip that predates editable
-`pyproject.toml` installs. Upgrade the packaging tools and retry:
-
-```sh
-./.venv/bin/python -m pip install --upgrade pip setuptools wheel
-./.venv/bin/python -m pip install -e ".[dev]"
-```
-
-If pip then reports that the Python version is unsupported, the environment was
-created with an older interpreter. Remove only the `.venv` directory, install
-Python 3.12, and repeat the fresh installation commands with `python3.12`.
-
-### Fixing `node: command not found` or `npm: command not found`
-
-On macOS, install the Homebrew Node.js package and verify both commands:
-
-```sh
-brew install node
-node --version
-npm --version
-```
-
-If `brew` is also not found, complete the Homebrew installation and shell-path
-steps in the macOS prerequisite section first. Then run the fresh installation
-again starting with `npm --prefix ui ci`; the Python environment does not need
-to be recreated.
-
-## Running tests
-
-```sh
-./.venv/bin/python -m pytest
-```
-
-## Running the full application
-
-After completing the fresh installation, start both services from the project
-root with:
+## Run
 
 ```sh
 ./run.sh
+# equivalent: uv run --frozen --no-dev sarsim
 ```
 
-Leave that terminal open while using SARSim. Wait for the UI to report that it
-compiled, then open `http://localhost:3000` in a browser. The API is available
-at `http://127.0.0.1:8000`. Press Ctrl+C in the terminal to stop both services.
+Open <http://127.0.0.1:8000>. The same Python process serves the API and UI.
+Interactive API documentation is at <http://127.0.0.1:8000/docs>.
 
-> **Open `http://localhost:3000` to use SARSim.** Port 8000 is the backend API
-> and does not contain the browser application.
+No second terminal, frontend development server, npm install, or build is needed.
 
-`run.sh` also checks the standard Apple Silicon and Intel Homebrew locations for
-Node.js and npm, even if Homebrew has not yet been added to the active shell's
-`PATH`. If UI packages are missing, it installs them from `package-lock.json`
-before starting.
+SARSim Studio uses the NRL operations-console visual identity. Select an agent
+in **Mission controls**, then use **W/A/S/D** for cardinal movement and
+**Space** for the applicable action directly ahead (clear, triage, retrieve,
+load, transfer, or breach). Press **C** to cycle control through every agent;
+the 2D map follows the selected agent's z-level. Keyboard shortcuts are
+suspended while focus is in a form control or JSON editor.
 
-If startup reports that port 8000 or 3000 is already in use, another copy of
-the application (or another service) is running. On macOS, identify it with:
+## Gymnasium
+
+```python
+import gymnasium as gym
+import src  # registers all SARSim Gymnasium environments
+
+env = gym.make("SARSim-v0", max_episode_steps=500)
+observation, info = env.reset(seed=42)
+
+action = {
+    "action_type": 1,       # SARSimAction.MOVE_FORWARD
+    "agent": 0,
+    "target_casualty": 0,
+    "target_coord": [0, 0, 0],
+}
+observation, reward, terminated, truncated, info = env.step(action)
+```
+
+`SARSimEnv` is a normal `gymnasium.Env` with Dict action/observation spaces,
+fixed-size NumPy observations, deterministic reset seeding, reward signals, and
+separate `terminated`/`truncated` results. Named actions are available from
+`src.gym_env.SARSimAction`. Pass an authored scenario dictionary to
+`SARSimEnv(scenario=scenario)` for a fixed training environment.
+
+### Partially observable environments
+
+Use `SARSim-FOV-v0` for current-visibility, per-agent observations:
+
+```python
+env = gym.make(
+    "SARSim-FOV-v0",
+    max_episode_steps=500,
+    fov_range=4,
+    fov_angle_degrees=90.0,
+)
+observation, info = env.reset(seed=42)
+```
+
+The FOV environment preserves the same action space and reward rules. Its
+observation contains `grid[observer, z, y, x, channel]`, `visibility`,
+`observer_mask`, and observer-specific `agents` and `casualties` tables. Grid
+channels are cell status, smoke density, and intact-building occupancy. Hidden
+cells and entities are zeroed; use `visibility` to distinguish an unknown cell
+from a visible empty cell. Each agent sees only the cone on its current z-level.
+Any positive smoke density, an impassable wall, or an intact building cell
+blocks cells behind it. The blocking cell remains visible. This first filter has
+no exploration memory: cells become unknown as soon as they leave the cone.
+
+`SARSim-MiniGrid-v0` uses the same masked observation contract but exposes a
+three-cell-wide, agent-relative corridor. Its depth is configured with
+`sensor_range`; walls, buildings, and any positive smoke density occlude cells
+behind them.
+
+```python
+env = gym.make("SARSim-MiniGrid-v0", sensor_range=4)
+```
+
+## Scenario editor
+
+Use the header switch to move between mutually exclusive **Simulation** and
+**Scenario editor** modes. Editor mode dedicates the full workspace to separate
+GoldenLayout panels for placement tools, the scenario map, cell properties,
+scenario settings, and JSON source. It can paint walls, debris, smoke,
+casualties, agents, buildings, extraction zones, and field hospitals on any
+z-level. The JSON panel can import the active runtime, open/download scenario
+files, format source, validate without mutating runtime state, and load the
+authored scenario into Simulation mode. Bundled `editor/*.json` scenarios can
+be selected and loaded directly from **Mission controls**, and both maps include
+a legend for agents, casualties, terrain, hazards, buildings, and zones.
+
+Selecting an editor cell opens contextual properties for casualty health,
+decay, and cover; agent class and orientation; building integrity and collapse;
+cell status; and smoke density. The separate Scenario settings panel manages
+active zones, difficulty, rescue constraints, and scheduled smoke events;
+Editor tools provides deterministic scenario regeneration. Together they
+preserve the capabilities of the former desktop editor. Building cells can be
+stacked at the same x/y coordinate across z-levels to author multi-story towers.
+Scenario settings also selects `FULL`, `FOV_CONE`, or `MINIGRID_3` perception
+and configures its range and cone angle. During simulation, the controlled
+agent's current visibility masks both the world-aligned 2D map and the 3D scene;
+switching agents with **C** immediately switches the rendered sensor view.
+
+## 3D viewer
+
+The center stack includes **3D scene** in Simulation mode and **3D preview** in
+Scenario editor mode. Both render every z-level with terrain, debris, smoke,
+zones, buildings, casualties, UGVs, UAVs, orientation, and payload state. Drag
+to orbit, Shift-drag or right-drag to pan, scroll to zoom, or use the
+isometric/top/fit presets. Clicking an entity synchronizes the corresponding
+map or properties selection.
+
+The bundled **Vertical City Mass Rescue**, **Transit Hub Progressive
+Collapse**, and **Harbor Refinery Emergency** scenarios are dense 3D showcases
+with mixed UGV/UAV teams, stackable buildings, collapse damage, smoke, debris,
+casualties, scheduled events, extraction areas, and field hospitals.
+
+Three.js r187 and its MIT license are vendored under `src/ui/vendor/`; no CDN,
+npm installation, frontend build, or network connection is required at runtime.
+
+GoldenLayout lets users drag tabs, resize panels, maximize views, add duplicate
+panels, and save their preferred workspace locally. Simulation and editor
+layouts are persisted independently. GoldenLayout is vendored, so the
+application remains usable offline.
+
+## Development
 
 ```sh
-lsof -nP -iTCP:8000 -sTCP:LISTEN
-lsof -nP -iTCP:3000 -sTCP:LISTEN
+uv sync --frozen
+uv run pytest
+uv run ruff check .
+uv run mypy src
 ```
 
-Stop the listed process from the terminal where it was started, then run
-`./run.sh` again.
+Runtime dependencies are deliberately small: NumPy, Gymnasium, FastAPI, and
+Uvicorn. Development tools live in uv's `dev` dependency group.
 
-## Running only the backend API
+## Layout
 
-```sh
-./.venv/bin/python run_server.py
-```
-
-This command starts **only the FastAPI backend** at `http://127.0.0.1:8000`; it
-does not start the SARSim browser application. Interactive API documentation is
-available at `http://127.0.0.1:8000/docs`.
-
-Useful endpoints include:
-- `GET /state`
-- `POST /actions`
-- `POST /step`
-- `POST /init/dev`
-- `POST /scenario/load`
-- `POST /scenario/load-from-path`
-- `GET /telemetry`
-- `POST /reset`
-- `WS /events/stream`
-
-## Running the standalone scenario editor
-
-```sh
-./.venv/bin/python editor/app.py
-```
-
-The editor is a standalone desktop application built with Pygame.
-Current capabilities include:
-- generate a scenario-definition map
-- paint walls, debris, smoke, casualties, agents, zone cells, and building cells
-- author and cycle zones, including `FIELD_HOSPITAL`
-- inspect selected cells and authored content
-- switch z-levels
-- save/load the current scenario as JSON
-- validate the scenario by rebuilding an engine from it
-
-## Project layout
-
-- `src/core/`: simulation model, domain types, actions, and engine logic
-- `src/api/`: FastAPI server, API models, serializers, and engine state access
-- `tests/`: pytest suite
-- `docs/`: concise project documentation
-- `ui/`: frontend client
-
-## Documentation
-
-Start here for quick orientation:
-- `docs/project_overview.md`
-- `docs/code_organization.md`
-- `docs/core_simulation.md`
-- `docs/api_and_state.md`
-- `docs/http_api_reference.md`
-- `docs/researcher_api_quick_reference.md`
-- `docs/scenario_editor_user_guide.md`
-- `docs/testing_and_conventions.md`
-- `docs/tech_stack.md`
-- `docs/domain_invariants.md`
-
-## Notes
-
-- The backend currently uses an in-memory global simulation engine.
-- `GET /state` includes recent event history, while `WS /events/stream` provides live incremental events after connection.
-- The codebase is structured so core simulation behavior stays in `src/core/`, while transport and serialization stay in `src/api/`.
-- Tests are intended to serve as executable documentation for current behavior.
+- `src/core/` — simulation model
+- `src/api/` — HTTP/WebSocket transport and static UI serving
+- `src/gym_env.py` — Gymnasium environment
+- `src/utils/` — scenario generation and serialization
+- `src/ui/` — packaged, ready-to-serve dependency-free browser workspace
+- `editor/*.json` — example scenarios
+- `tests/` — regression suite

@@ -26,6 +26,30 @@ def _make_engine() -> SimulationEngine:
     return SimulationEngine(grid=grid)
 
 
+def test_engine_rejects_agents_at_the_same_coordinate() -> None:
+    engine = _make_engine()
+    engine.add_agent(Agent(
+        id="A1",
+        coord=Coordinate(x=1, y=1, z=0),
+        orientation=Orientation.NORTH,
+        agent_class=AgentClass.UGV,
+    ))
+
+    try:
+        engine.add_agent(Agent(
+            id="A2",
+            coord=Coordinate(x=1, y=1, z=0),
+            orientation=Orientation.SOUTH,
+            agent_class=AgentClass.UGV,
+        ))
+    except ValueError as exc:
+        assert "cannot share coordinate (1, 1, 0)" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate agent coordinate to be rejected")
+
+    assert set(engine.agents) == {"A1"}
+
+
 def test_tick_advances_casualty_health() -> None:
     """Engine.tick should advance casualty health according to update rules."""
     engine = _make_engine()
