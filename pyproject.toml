@@ -9,6 +9,7 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "gymnasium>=1.0,<2",
+    "mlx>=0.29 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
 
 [project.scripts]

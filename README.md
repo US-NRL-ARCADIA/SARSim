@@ -12,10 +12,13 @@ scenario authoring, and human-in-the-loop experimentation in a discrete 3D grid.
 - full-state, FOV-cone, and MiniGrid-style Gymnasium environments registered as
   `SARSim-v0`, `SARSim-FOV-v0`, and `SARSim-MiniGrid-v0`
 - FastAPI transport for interactive and remote clients
-- separate Simulation and Scenario editor workspace modes in one browser UI
+- separate Simulation, Scenario editor, and RL training workspace modes in one
+  browser UI
 - draggable, resizable, independently persistent panels powered by vendored
   GoldenLayout
 - interactive Three.js views of live and authored 3D scenes
+- an Apple MLX/Metal planner-guided DQN trainer with live loss/reward charts and
+  ready-to-run 8×8 and 10×10 rescue checkpoints under `agents/`
 
 The browser frontend is committed as static HTML/CSS/JavaScript. It has no npm,
 Node.js, transpiler, or build step. The old Pygame editor and its SDL packages
@@ -61,6 +64,39 @@ load, transfer, or breach). Press **C** to cycle control through every agent;
 the 2D map follows the selected agent's z-level. Keyboard shortcuts are
 suspended while focus is in a form control or JSON editor.
 
+The Simulation workspace's **Mission controls** panel has two control modes.
+Choose **Mission control** for direct keyboard and action-button control, or
+choose **Existing agent** to select a compatible trained checkpoint, activate
+it, single-step its policy, or let it play the loaded mission continuously.
+
+## Reinforcement learning
+
+Open the top-level **RL training** workspace in the header to train a DQN on the
+machine's Apple GPU. The workspace configures episode count, map size, hidden layer
+width, replay batch size, learning rate, and seed; it plots loss and utilitarian
+episode reward live while a background training job runs. Completed weights and
+metadata are written to `agents/` and can be activated, single-stepped, or run
+continuously against a loaded scenario of the same grid size.
+
+Training uses MLX/Metal on Apple Silicon, replay memory, a target network, and
+planner demonstrations. Its five policy actions are forward, left, right,
+context-sensitive interaction, and wait. The reward prioritizes human survival:
+`+100` for a living rescue, `-100` for a casualty death, and only `+2` for body
+recovery, with additional small penalties for time, invalid actions, and total
+casualty health loss.
+
+Two trained checkpoints are included:
+
+- `utilitarian_rescue_dqn_10x10` — the default simulator size
+- `utilitarian_rescue_dqn_8x8` — a smaller curriculum/deployment size
+
+Both were trained for 500 episodes on procedurally generated, independently
+verified solvable levels. Their metadata records 100 held-out evaluations and
+the committed safety-constrained policies achieved 100% living rescue and full
+mission success on those one-UGV evaluation curricula. The 10×10 checkpoint
+also rescued all 300 casualties across a separate 50-scenario, three-agent
+generator stress run (299 while still alive).
+
 ## Gymnasium
 
 ```python
@@ -83,7 +119,18 @@ observation, reward, terminated, truncated, info = env.step(action)
 fixed-size NumPy observations, deterministic reset seeding, reward signals, and
 separate `terminated`/`truncated` results. Named actions are available from
 `src.gym_env.SARSimAction`. Pass an authored scenario dictionary to
-`SARSimEnv(scenario=scenario)` for a fixed training environment.
+`SARSimEnv(scenario=scenario)` for a fixed training environment. A non-empty
+mission terminates successfully as soon as every casualty has been transferred
+into field-hospital care; temporal deadlines can still end it earlier.
+
+Default levels are generated constructively: every casualty has a verified
+traversable ground route linking a UGV and field hospital. Permanent obstacles
+are sampled only after that rescue network is reserved, so generation is fast
+and does not rely on retrying random maps. Generated levels vary casualty
+urgency and mix covered casualties, obscured routes, debris, and breachable
+buildings to create routing and rescue-order tradeoffs.
+`src.utils.generator.analyze_solvability` can also check generated or authored
+scenario dictionaries.
 
 ### Partially observable environments
 
@@ -175,14 +222,17 @@ uv run mypy src
 ```
 
 Runtime dependencies are deliberately small: NumPy, Gymnasium, FastAPI, and
-Uvicorn. Development tools live in uv's `dev` dependency group.
+Uvicorn, plus platform-gated MLX on Apple Silicon. Development tools live in
+uv's `dev` dependency group.
 
 ## Layout
 
 - `src/core/` — simulation model
 - `src/api/` — HTTP/WebSocket transport and static UI serving
 - `src/gym_env.py` — Gymnasium environment
+- `src/rl/` — MLX DQN, replay buffer, planner guidance, training manager
 - `src/utils/` — scenario generation and serialization
 - `src/ui/` — packaged, ready-to-serve dependency-free browser workspace
+- `agents/` — trained safetensor checkpoints and evaluation metadata
 - `editor/*.json` — example scenarios
 - `tests/` — regression suite

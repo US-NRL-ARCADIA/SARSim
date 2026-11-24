@@ -9,7 +9,7 @@ from src.core.engine import SimulationEngine
 from src.core.events import Event, EventType
 from src.core.grid import Coordinate, SpatialGrid
 from src.core.types import CellStatus, DamageStatus, TransportStatus
-from src.utils.generator import generate_scenario
+from src.utils.generator import analyze_solvability, generate_scenario
 from src.utils.serializer import (
     build_engine_from_scenario_definition,
     deserialize_engine_state,
@@ -288,8 +288,68 @@ def test_generated_scenario_builds_valid_engine() -> None:
     assert len(rebuilt.agents) == 4
     assert len(rebuilt.casualties) >= 1
 
+    report = analyze_solvability(scenario)
+    assert report.solvable is True
+    assert report.unreachable_casualty_ids == ()
+    assert scenario["evaluation"]["solvability"]["verified"] is True
+    assert any(zone["zone_type"] == "FIELD_HOSPITAL" for zone in scenario["zones"])
+
     for agent in rebuilt.agents.values():
         if agent.agent_class is AgentClass.UGV:
             assert agent.coord.z == 0
         if agent.agent_class is AgentClass.UAV:
             assert agent.coord.z >= 1
+
+
+def test_generated_scenarios_are_solvable_across_seeds_and_high_obstacle_density() -> None:
+    for seed in range(30):
+        scenario = generate_scenario(
+            grid_size=12,
+            z_depth=3,
+            building_density=0.65,
+            hazard_density=0.4,
+            casualty_density=0.12,
+            debris_density=0.3,
+            seed=seed,
+            agent_count=5,
+        )
+
+        report = analyze_solvability(scenario)
+        assert report.solvable, (seed, report)
+        assert len(report.reachable_casualty_ids) == len(scenario["casualties"])
+
+
+def test_generated_scenario_has_meaningful_rescue_tradeoffs() -> None:
+    scenario = generate_scenario(
+        grid_size=10,
+        z_depth=2,
+        building_density=0.15,
+        hazard_density=0.1,
+        casualty_density=0.1,
+        debris_density=0.1,
+        seed=17,
+        agent_count=3,
+    )
+
+    tradeoffs = scenario["evaluation"]["tradeoffs"]
+    assert tradeoffs["covered_casualties"] > 0
+    assert tradeoffs["smoke_on_guaranteed_routes"] > 0
+    assert len({casualty["decay_rate"] for casualty in scenario["casualties"]}) > 1
+
+
+def test_generator_rejects_configuration_without_a_responder() -> None:
+    try:
+        generate_scenario(
+            grid_size=8,
+            z_depth=2,
+            building_density=0.1,
+            hazard_density=0.1,
+            casualty_density=0.1,
+            debris_density=0.1,
+            seed=1,
+            agent_count=0,
+        )
+    except ValueError as exc:
+        assert "agent_count" in str(exc)
+    else:
+        raise AssertionError("generator should reject a scenario without a responder")

@@ -226,5 +226,20 @@ class LoadScenarioRequest(BaseModel):
 class GenerateScenarioRequest(BaseModel):
     grid_size: int = Field(default=10, ge=2, le=50)
     z_depth: int = Field(default=3, ge=1, le=10)
-    agent_count: int = Field(default=2, ge=0, le=100)
+    agent_count: int = Field(default=2, ge=1, le=100)
     seed: int | None = 42
+    building_density: float = Field(default=0.08, ge=0.0, le=1.0)
+    hazard_density: float = Field(default=0.04, ge=0.0, le=1.0)
+    casualty_density: float = Field(default=0.06, ge=0.0, le=1.0)
+    debris_density: float = Field(default=0.05, ge=0.0, le=1.0)
+
+
+class TrainingStartRequest(BaseModel):
+    name: str = Field(default="sarsim_dqn", min_length=1, max_length=80)
+    episodes: int = Field(default=250, ge=1, le=100_000)
+    max_steps: int = Field(default=240, ge=10, le=10_000)
+    grid_size: int = Field(default=10, ge=4, le=20)
+    seed: int = 42
+    hidden_size: int = Field(default=128, ge=16, le=1024)
+    batch_size: int = Field(default=64, ge=8, le=1024)
+    learning_rate: float = Field(default=0.0005, gt=0.0, le=0.1)

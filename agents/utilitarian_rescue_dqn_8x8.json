@@ -1,0 +1,22 @@
+{
+  "name": "utilitarian_rescue_dqn_8x8",
+  "algorithm": "DQN",
+  "backend": "mlx-metal",
+  "grid_size": 8,
+  "input_size": 461,
+  "hidden_size": 128,
+  "action_names": [
+    "MOVE_FORWARD",
+    "TURN_LEFT",
+    "TURN_RIGHT",
+    "INTERACT",
+    "WAIT"
+  ],
+  "episodes_trained": 500,
+  "mean_rescued_last_20": 2.0,
+  "mean_reward_last_20": 223.20111500000002,
+  "held_out_episodes": 100,
+  "held_out_living_rescue_rate": 1.0,
+  "held_out_success_rate": 1.0,
+  "description": "Planner-guided utilitarian DQN: +100 living rescue, -100 casualty death, small time/health penalties. Trained on solvable levels."
+}

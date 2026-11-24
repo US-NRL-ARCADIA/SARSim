@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -30,6 +31,7 @@ from src.api.state import (
 from src.core.actions import EngineAction, EngineActionType
 from src.core.engine import SimulationEngine
 from src.core.grid import Coordinate, SpatialGrid
+from src.rl import TrainingConfig, TrainingManager, backend_status, list_checkpoints
 from src.utils.generator import generate_scenario
 from src.utils.serializer import (
     ScenarioDefinition,
@@ -46,6 +48,7 @@ from .models import (
     StateSnapshotModel,
     StepRequest,
     TelemetryFrameModel,
+    TrainingStartRequest,
 )
 
 app = FastAPI(title="SARSim API")
@@ -53,6 +56,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = PACKAGE_ROOT.parent
 UI_DIR = PACKAGE_ROOT / "ui"
 SCENARIO_DIR = PROJECT_ROOT / "editor"
+training_manager = TrainingManager()
 
 
 _API_TO_ENGINE_ACTION_TYPE = {
@@ -196,19 +200,80 @@ def list_scenarios() -> list[dict[str, str]]:
     return scenarios
 
 
+@app.get("/training/backend")
+def training_backend() -> dict[str, object]:
+    """Return MLX/Metal availability for the RL training workspace."""
+    return backend_status()
+
+
+@app.get("/training/status")
+def training_status() -> dict[str, object]:
+    return training_manager.status()
+
+
+@app.post("/training/start")
+def start_training(req: TrainingStartRequest) -> dict[str, object]:
+    config = TrainingConfig(
+        name=req.name,
+        episodes=req.episodes,
+        max_steps=req.max_steps,
+        grid_size=req.grid_size,
+        seed=req.seed,
+        hidden_size=req.hidden_size,
+        batch_size=req.batch_size,
+        learning_rate=req.learning_rate,
+    )
+    try:
+        return training_manager.start(config)
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/training/stop")
+def stop_training() -> dict[str, object]:
+    return training_manager.stop()
+
+
+@app.get("/agents")
+def trained_agents() -> list[dict[str, object]]:
+    return list_checkpoints()
+
+
+@app.post("/agents/{name}/activate")
+def activate_trained_agent(name: str) -> dict[str, Any]:
+    try:
+        return training_manager.activate(name)
+    except (OSError, RuntimeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=422, detail=f"Cannot load agent: {exc}") from exc
+
+
+@app.post("/agents/step")
+def step_trained_agent() -> dict[str, object]:
+    engine = get_engine()
+    if engine.ended:
+        raise HTTPException(status_code=409, detail="Scenario has ended")
+    try:
+        return training_manager.step_active(engine)
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @app.post("/scenario/generate")
 def generate_authored_scenario(req: GenerateScenarioRequest) -> ScenarioDefinition:
-    """Generate the same deterministic research scenario used by the former editor."""
-    return generate_scenario(
-        grid_size=req.grid_size,
-        z_depth=req.z_depth,
-        building_density=0.08,
-        hazard_density=0.04,
-        casualty_density=0.06,
-        debris_density=0.05,
-        seed=req.seed,
-        agent_count=req.agent_count,
-    )
+    """Generate a deterministic scenario with verified rescue reachability."""
+    try:
+        return generate_scenario(
+            grid_size=req.grid_size,
+            z_depth=req.z_depth,
+            building_density=req.building_density,
+            hazard_density=req.hazard_density,
+            casualty_density=req.casualty_density,
+            debris_density=req.debris_density,
+            seed=req.seed,
+            agent_count=req.agent_count,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.post("/scenario/load")

@@ -62,6 +62,9 @@ body > header {
 .workspace-switch button { min-height: 29px; border: 0; background: transparent; color: #bfcbd6; box-shadow: none; }
 .workspace-switch button:hover { border: 0; background: #354b5f; color: #fff; }
 .workspace-switch button.active { border: 0; background: #edf4fa; color: #315f89; box-shadow: 0 1px 3px rgb(10 24 38 / 30%); }
+body[data-workspace="training"] #add-panel,
+body[data-workspace="training"] #save-layout,
+body[data-workspace="training"] #reset-layout { display: none; }
 
 .status { display: flex; align-items: center; gap: 9px; color: #c4ced8; font-size: 11px; }
 .status i { width: 8px; height: 8px; border-radius: 50%; background: #d19a4b; }
@@ -419,6 +422,58 @@ body[data-workspace="editing"] .status em { display: none; }
 .event { display: grid; grid-template-columns: 50px 155px 1fr; gap: 8px; padding: 7px 8px; margin-bottom: 5px; border-left: 2px solid #9babb9; background: #f7f9fb; font-size: 10px; }
 .event .type { color: #94651f; font-family: var(--mono); }
 .code { overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: #f6f8fa; color: #355b4c; font: 11px/1.6 var(--mono); white-space: pre; }
+
+.control-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 0 0 11px; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: #e7edf3; }
+.control-mode button { border-color: transparent; background: transparent; box-shadow: none; color: #627487; }
+.control-mode button.active { border-color: #aac0d3; background: #fff; color: #315f89; box-shadow: 0 1px 3px rgb(35 55 75 / 14%); }
+.policy-card { display: grid; gap: 8px; margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-soft); }
+.policy-card select { width: 100%; min-width: 0; }
+.policy-card p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.policy-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.policy-metrics span { padding: 6px; border: 1px solid var(--line-soft); border-radius: 4px; background: #fff; color: var(--muted); font-size: 8px; }
+.policy-metrics b { display: block; margin-top: 2px; color: #3d6851; font: 700 11px var(--mono); }
+.policy-actions { margin: 0; }
+.compatibility-error { padding: 7px; border-left: 3px solid var(--red); background: var(--red-soft); color: #914752; font-size: 9px; line-height: 1.4; }
+.agent-status { color: #66788a; font: 8px var(--mono); overflow-wrap: anywhere; }
+
+.training-panel { min-width: 650px; }
+.training-banner { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 11px; padding: 9px 11px; border: 1px solid #9fc3ad; border-radius: 5px; background: var(--green-soft); color: #3e6e53; font-size: 10px; }
+.training-banner.unavailable { border-color: #d6aeb4; background: var(--red-soft); color: #914752; }
+.training-banner b { text-transform: uppercase; letter-spacing: .06em; }
+.training-layout { display: grid; grid-template-columns: minmax(260px, .75fr) minmax(360px, 1.25fr); gap: 12px; }
+.training-controls, .training-monitor, .checkpoint-runner { padding: 11px; border: 1px solid var(--line); border-radius: 6px; background: #f8fafc; }
+.training-controls h3 { margin: 0 0 9px; color: #3c5871; font-size: 11px; }
+.training-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.training-form label { display: grid; gap: 3px; color: #68798b; font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.training-form input { width: 100%; min-width: 0; }
+.training-controls .toolbar { margin: 10px 0; }
+.reward-card { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 9px; border-left: 3px solid var(--green); background: var(--green-soft); color: #41644f; font-size: 9px; }
+.reward-card strong, .reward-card small { grid-column: 1 / -1; }
+.reward-card small { color: #617a69; line-height: 1.4; }
+.training-progress { height: 6px; margin-bottom: 10px; overflow: hidden; border-radius: 3px; background: #dfe7ee; }
+.training-progress div { height: 100%; background: var(--blue); transition: width .25s ease; }
+.training-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 9px; }
+.training-stats > div { padding: 7px; border: 1px solid var(--line-soft); border-radius: 4px; background: #fff; }
+.training-stats small { display: block; color: var(--muted); font-size: 7px; text-transform: uppercase; }
+.training-stats b { display: block; margin-top: 3px; color: #334b61; font: 700 13px var(--mono); }
+.training-stats em { color: #7b8996; font-size: 8px; font-style: normal; }
+.chart-card { margin: 7px 0; padding: 8px; border: 1px solid var(--line-soft); border-radius: 5px; background: #fff; }
+.chart-card > div:first-child { display: flex; justify-content: space-between; color: #536579; font-size: 8px; text-transform: uppercase; }
+.chart-card > div span { color: #8793a0; }
+.training-chart { display: block; width: 100%; height: 115px; margin-top: 5px; overflow: visible; }
+.training-chart line { stroke: #d9e1e8; stroke-width: 1; }
+.training-chart polyline { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.training-chart text { fill: #82909e; font: 8px var(--mono); }
+.chart-empty { display: grid; place-items: center; height: 115px; color: var(--muted); font-size: 9px; }
+.training-message { margin: 7px 0 0; color: #596c7f; font: 9px/1.4 var(--mono); }
+.checkpoint-runner { margin-top: 12px; }
+.checkpoint-runner .title { margin-bottom: 7px; }
+.checkpoint-row { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto; gap: 6px; }
+.checkpoint-runner p { margin: 8px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+
+@container (max-width: 850px) {
+  .training-layout { grid-template-columns: 1fr; }
+}
 
 #toast { position: fixed; right: 16px; bottom: 16px; z-index: 100; max-width: 430px; padding: 10px 14px; border: 1px solid #9caebe; border-radius: 5px; background: #fff; color: #3f5367; box-shadow: 0 10px 30px rgb(30 41 59 / 20%); font-size: 11px; opacity: 0; transform: translateY(10px); transition: .2s; pointer-events: none; }
 #toast.show { opacity: 1; transform: none; }

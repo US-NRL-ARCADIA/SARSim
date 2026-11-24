@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>NRL SARSim Studio</title>
   <link rel="stylesheet" href="/ui/vendor/goldenlayout-base.css">
-  <link rel="stylesheet" href="/ui/styles.css?v=4">
+  <link rel="stylesheet" href="/ui/styles.css?v=6">
 </head>
 <body>
   <header>
@@ -16,6 +16,7 @@
     <div class="workspace-switch" role="group" aria-label="Workspace mode">
       <button type="button" data-workspace-mode="simulation">Simulation</button>
       <button type="button" data-workspace-mode="editing">Scenario editor</button>
+      <button type="button" data-workspace-mode="training">RL training</button>
     </div>
     <div class="status"><i id="status-dot"></i><span id="status-label">Connecting</span><em>Cycle <b id="tick">—</b></em><em>Agents <b id="agent-count">—</b></em></div>
     <nav>
@@ -27,6 +28,6 @@
   </header>
   <main id="layout"></main>
   <aside id="toast" role="status"></aside>
-  <script type="module" src="/ui/app.js?v=17"></script>
+  <script type="module" src="/ui/app.js?v=20"></script>
 </body>
 </html>

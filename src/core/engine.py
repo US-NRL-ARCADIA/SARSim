@@ -125,6 +125,26 @@ class SimulationEngine:
         if self.perception_enabled:
             self._update_agent_observations()
 
+        if self.casualties and set(self.casualties).issubset(
+            self.rescued_casualty_ids
+        ):
+            self.ended = True
+            self.success = True
+            self.log_event(
+                EventType.SCENARIO_ENDED,
+                (
+                    f"Scenario ended at cycle {self.current_tick}; all "
+                    f"{len(self.casualties)} casualties rescued."
+                ),
+                payload={
+                    "reason": "all_casualties_rescued",
+                    "rescued_count": self.rescued_count,
+                    "total_casualties": len(self.casualties),
+                    "success": True,
+                },
+            )
+            return
+
         constraint = self.temporal_constraint
         if constraint is not None and self.current_tick >= int(constraint["deadline_cycles"]):
             self.ended = True

@@ -112,7 +112,9 @@ def test_ui_exposes_keyboard_controls_scenario_picker_and_map_legend() -> None:
     assert 'transport_status!=="LOADED"&&sees(c)' not in app_js
     assert 'data-workspace-mode="simulation"' in index_html
     assert 'data-workspace-mode="editing"' in index_html
+    assert 'data-workspace-mode="training"' in index_html
     assert 'simulation:["simulator","scene3d","controls","inspector","events"]' in app_js
+    assert 'training:["training"]' in app_js
     assert "Gymnasium API" not in app_js
     assert "Gymnasium API" not in index_html
     assert "Load demo" not in app_js
@@ -215,6 +217,38 @@ def test_editor_can_regenerate_the_former_desktop_editor_scenario() -> None:
     )
 
 
+def test_scenario_generator_api_exposes_curriculum_densities() -> None:
+    response = client.post(
+        "/scenario/generate",
+        json={
+            "grid_size": 10,
+            "z_depth": 2,
+            "agent_count": 3,
+            "seed": 8,
+            "building_density": 0.4,
+            "hazard_density": 0.2,
+            "casualty_density": 0.1,
+            "debris_density": 0.15,
+        },
+    )
+
+    assert response.status_code == 200
+    scenario = response.json()
+    assert len(scenario["casualties"]) == 10
+    assert scenario["evaluation"]["solvability"]["verified"] is True
+    assert scenario["evaluation"]["tradeoffs"]["smoke_cells"] == 40
+
+
+def test_scenario_generator_api_rejects_impossible_agent_capacity() -> None:
+    response = client.post(
+        "/scenario/generate",
+        json={"grid_size": 2, "z_depth": 1, "agent_count": 3},
+    )
+
+    assert response.status_code == 422
+    assert "agent_count" in response.json()["detail"]
+
+
 def test_scenario_rejects_agents_at_the_same_coordinate() -> None:
     scenario = {
         "grid": {"N": 4, "Z": 2},
@@ -250,12 +284,65 @@ def test_ui_loads_populated_workspace_after_render_helpers_are_initialized() -> 
     assert 'componentType:"scene3d"' in app_js
     assert 'componentType:"editor"' in app_js
     assert 'componentType:"editor3d"' in app_js
+    assert 'componentType:"training"' in app_js
+    assert 'training:{settings:{hasHeaders:false' in app_js
+    assert 'data-training-action="start"' in app_js
+    assert 'Live loss' in app_js
+    assert 'trainingChart(history,"loss"' in app_js
+    assert 'post("/agents/step")' in app_js
+    assert 'data-control-mode="manual"' in app_js
+    assert 'data-control-mode="agent"' in app_js
+    assert "Existing agent" in app_js
+    assert "Let agent play" in app_js
+    assert 'app.controlMode!=="manual"' in app_js
     assert 'componentType:"editorTools"' in app_js
     assert 'componentType:"editorProperties"' in app_js
     assert 'componentType:"editorScenario"' in app_js
     assert 'componentType:"events"' in app_js
     assert 'componentType:"gym"' not in app_js
     assert "layoutKeys[app.mode]" in app_js
+
+
+def test_training_api_exposes_mlx_status_and_bundled_agents() -> None:
+    backend_response = client.get("/training/backend")
+    status_response = client.get("/training/status")
+    agents_response = client.get("/agents")
+
+    assert backend_response.status_code == 200
+    assert {"available", "backend", "device"} <= backend_response.json().keys()
+    assert status_response.status_code == 200
+    assert status_response.json()["state"] in {
+        "idle", "starting", "running", "stopped", "completed", "failed",
+    }
+    assert agents_response.status_code == 200
+    agents = {item["name"]: item for item in agents_response.json()}
+    assert {
+        "utilitarian_rescue_dqn_8x8",
+        "utilitarian_rescue_dqn_10x10",
+    } <= agents.keys()
+    for name in (
+        "utilitarian_rescue_dqn_8x8",
+        "utilitarian_rescue_dqn_10x10",
+    ):
+        item = agents[name]
+        assert item["algorithm"] == "DQN"
+        assert item["backend"] == "mlx-metal"
+        assert item["episodes_trained"] == 500
+        assert item["held_out_episodes"] == 100
+        assert item["held_out_living_rescue_rate"] == 1.0
+        assert item["held_out_success_rate"] == 1.0
+        assert item["ready"] is True
+        assert item["weights_bytes"] > 0
+
+
+def test_training_api_rejects_unsafe_checkpoint_name() -> None:
+    response = client.post(
+        "/training/start",
+        json={"name": "../outside", "episodes": 1, "max_steps": 10},
+    )
+
+    assert response.status_code == 409
+    assert "name may contain only" in response.json()["detail"]
 
 
 def test_get_state_initially_empty() -> None:

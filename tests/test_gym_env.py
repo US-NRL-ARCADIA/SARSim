@@ -224,6 +224,51 @@ def test_gym_action_moves_agent_and_truncates() -> None:
     assert info["events"][-1]["event_type"] == "ACTION_COMPLETED"
 
 
+def test_gym_episode_terminates_when_every_casualty_is_rescued() -> None:
+    scenario = {
+        "grid": {"N": 4, "Z": 1, "cells": [], "smoke": []},
+        "agents": [{
+            "id": "A1",
+            "coord": {"x": 1, "y": 1, "z": 0},
+            "orientation": "NORTH",
+            "agent_class": "UGV",
+            "payload_casualty_id": "C1",
+        }],
+        "casualties": [{
+            "id": "C1",
+            "coord": {"x": 1, "y": 1, "z": 0},
+            "health": 90.0,
+            "decay_rate": 0.0,
+            "is_covered": False,
+            "triage_state": "IMMEDIATE",
+            "transport_status": "LOADED",
+            "living_state": "ALIVE",
+        }],
+        "zones": [{
+            "id": "H1",
+            "zone_type": "FIELD_HOSPITAL",
+            "cells": [{"x": 2, "y": 1, "z": 0}],
+        }],
+    }
+    env = SARSimEnv(scenario=scenario, max_episode_steps=10)
+    env.reset(seed=1)
+
+    _, reward, terminated, truncated, info = env.step({
+        "action_type": int(SARSimAction.TRANSFER_CASUALTY),
+        "agent": 0,
+        "target_casualty": 0,
+        "target_coord": np.array([0, 0, 0], dtype=np.int64),
+    })
+
+    assert reward == 124.9
+    assert terminated is True
+    assert truncated is False
+    assert info["success"] is True
+    assert info["rescued_count"] == 1
+    assert info["events"][-1]["event_type"] == "SCENARIO_ENDED"
+    assert info["events"][-1]["payload"]["reason"] == "all_casualties_rescued"
+
+
 def test_reset_rejects_scenario_that_breaks_fixed_space() -> None:
     env = SARSimEnv()
     oversized = {"grid": {"N": 11, "Z": 3}}

@@ -120,6 +120,49 @@ def test_rescue_constraint_counts_hospital_transfer_and_ends_at_deadline() -> No
     assert engine.current_tick == 1
 
 
+def test_rescuing_every_casualty_ends_unconstrained_scenario_immediately() -> None:
+    engine = _make_engine()
+    casualty = Casualty(
+        id="C1", coord=Coordinate(x=1, y=1, z=0), health=50.0, decay_rate=0.0,
+        is_covered=False, triage_state=TriageState.UNKNOWN,
+        transport_status="LOADED", living_state=LivingState.ALIVE,
+    )
+    agent = Agent(
+        id="A1", coord=Coordinate(x=1, y=1, z=0),
+        orientation=Orientation.NORTH, agent_class=AgentClass.UGV, payload=casualty,
+    )
+    engine.add_casualty(casualty)
+    engine.add_agent(agent)
+    engine.zones = [{
+        "id": "H1",
+        "zone_type": "FIELD_HOSPITAL",
+        "cells": [{"x": 2, "y": 1, "z": 0}],
+    }]
+    engine.queue_action(EngineAction(
+        action_id="TRANSFER",
+        actor_id="A1",
+        action_type=EngineActionType.TRANSFER_CASUALTY,
+    ))
+
+    engine.tick()
+
+    assert engine.current_tick == 1
+    assert engine.rescued_count == 1
+    assert engine.ended is True
+    assert engine.success is True
+    ended = engine.events[-1]
+    assert ended.event_type is EventType.SCENARIO_ENDED
+    assert ended.payload == {
+        "reason": "all_casualties_rescued",
+        "rescued_count": 1,
+        "total_casualties": 1,
+        "success": True,
+    }
+
+    engine.tick()
+    assert engine.current_tick == 1
+
+
 def test_rescue_constraint_ends_unsuccessfully_at_deadline() -> None:
     engine = _make_engine()
     engine.temporal_constraint = {"type": "rescue_count", "target_count": 1, "deadline_cycles": 2}
